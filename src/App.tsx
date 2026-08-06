@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Activity, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { Activity, CheckCircle2 } from 'lucide-react';
 
 const mockData = [
   { commit: 'a1b2c3d', cpu: 1000, memory: 500, read: 200, write: 100 },
