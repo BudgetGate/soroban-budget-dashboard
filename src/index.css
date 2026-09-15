@@ -1,7 +1,108 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @layer base {
   body {
-    background-color: #0f172a;
+    background-color: #030303;
+    background-image: 
+      radial-gradient(circle at 10% 10%, rgba(0, 255, 157, 0.05) 0%, transparent 40%),
+      radial-gradient(circle at 90% 90%, rgba(255, 0, 128, 0.05) 0%, transparent 40%);
+    background-attachment: fixed;
+    color: #00ff9d;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    min-height: 100vh;
+    margin: 0;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background: rgba(10, 10, 10, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 255, 157, 0.3);
+    box-shadow: 0 0 15px rgba(0, 255, 157, 0.1), inset 0 0 15px rgba(0, 255, 157, 0.05);
+  }
+  
+  .glass-input {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(0, 255, 157, 0.4);
+    color: #00ff9d;
+    transition: all 0.2s ease;
+  }
+
+  .glass-input:focus {
+    border-color: #ff0080;
+    box-shadow: 0 0 15px rgba(255, 0, 128, 0.4);
+    outline: none;
+  }
+
+  .glass-button {
+    background: rgba(0, 255, 157, 0.1);
+    border: 1px solid #00ff9d;
+    color: #00ff9d;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+    box-shadow: 0 0 10px rgba(0, 255, 157, 0.2);
+    transition: all 0.2s ease;
+  }
+  
+  .glass-button:hover {
+    background: rgba(0, 255, 157, 0.2);
+    box-shadow: 0 0 20px rgba(0, 255, 157, 0.5);
+    transform: translateY(-2px);
+  }
+
+  .glass-button-pink {
+    background: rgba(255, 0, 128, 0.1);
+    border: 1px solid #ff0080;
+    color: #ff0080;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+    box-shadow: 0 0 10px rgba(255, 0, 128, 0.2);
+    transition: all 0.2s ease;
+  }
+  
+  .glass-button-pink:hover {
+    background: rgba(255, 0, 128, 0.2);
+    box-shadow: 0 0 20px rgba(255, 0, 128, 0.5);
+    transform: translateY(-2px);
+  }
+
+  .text-gradient {
+    color: #00ff9d;
+    text-shadow: 0 0 10px rgba(0, 255, 157, 0.8);
+  }
+
+  .terminal-cursor {
+    display: inline-block;
+    width: 10px;
+    height: 1.2em;
+    background-color: #00ff9d;
+    animation: blink 1s step-end infinite;
+    vertical-align: middle;
+    margin-left: 5px;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* Scanline effect */
+  body::after {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    z-index: 2;
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none;
   }
 }
