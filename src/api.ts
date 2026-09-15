@@ -76,6 +76,8 @@ const MOCK_HISTORY: SnapshotHistory = {
   ]
 };
 
+import { Octokit } from '@octokit/rest';
+
 export async function fetchSnapshotHistory(dataSourceUrl?: string): Promise<SnapshotHistory> {
   if (!dataSourceUrl) {
     // Fallback to mock data if no URL is provided
@@ -84,6 +86,39 @@ export async function fetchSnapshotHistory(dataSourceUrl?: string): Promise<Snap
     });
   }
 
+  // Handle GitHub API integration
+  // Expected format: github://owner/repo/branch/path/to/history.json
+  if (dataSourceUrl.startsWith('github://')) {
+    const parts = dataSourceUrl.replace('github://', '').split('/');
+    if (parts.length >= 4) {
+      const owner = parts[0];
+      const repo = parts[1];
+      const ref = parts[2];
+      const path = parts.slice(3).join('/');
+
+      const octokit = new Octokit();
+      try {
+        const response = await octokit.rest.repos.getContent({
+          owner,
+          repo,
+          path,
+          ref,
+        });
+
+        if (!Array.isArray(response.data) && response.data.type === 'file' && response.data.content) {
+          const decodedContent = atob(response.data.content);
+          return JSON.parse(decodedContent) as SnapshotHistory;
+        }
+        throw new Error('Not a valid file');
+      } catch (error: any) {
+        throw new Error(`GitHub API fetch failed: ${error.message}`);
+      }
+    } else {
+      throw new Error('Invalid github:// URL format. Expected github://owner/repo/branch/path');
+    }
+  }
+
+  // Standard fetch for normal URLs
   const response = await fetch(dataSourceUrl);
   if (!response.ok) {
     throw new Error(`Failed to fetch history: ${response.statusText}`);
