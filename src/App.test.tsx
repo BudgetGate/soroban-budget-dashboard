@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from './App';
 import * as api from './api';
 
@@ -13,7 +14,7 @@ vi.mock('./api', async () => {
 });
 
 // Mock ResizeObserver for Recharts
-global.ResizeObserver = class {
+globalThis.ResizeObserver = class {
   observe() {}
   unobserve() {}
   disconnect() {}
