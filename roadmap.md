@@ -6,8 +6,10 @@ Last updated: 2026-10-26
 
 ## Where I left off
 
-- No work has started in this repo yet. `main` is at `fc69fae`. Lint and build pass; all 3 tests fail.
+- No code work has started in this repo yet. `main` is at `4fdd186` (docs-only PR #4 on top of `fc69fae`). Lint and build pass; all 3 tests fail (rechecked 2026-10-26).
 - The live site at budgetgate-dashboard.vercel.app still has the title `temp_vite`.
+- Decided 2026-10-26: user docs live only in `BudgetGate/docs`. This repo's `docs/` and `/docs` route are to be removed (D9).
+- Core's real measurement has landed, so D7's footprint-entry charts are no longer waiting on core.
 - Next up: open the app in a browser (D3), then fix the tests and CI (D6).
 
 ## Phase 1: See what exists, make CI honest
@@ -20,10 +22,12 @@ Last updated: 2026-10-26
 - [ ] D1: real package name and `<title>`; regenerate `package-lock.json`
 - [ ] D4: "Sample data" label on the built-in history; remove the demo button that invents snapshots
 - [ ] Redeploy and confirm in a browser that the live title and content changed
+- [ ] D9: remove `docs/`, the `docs:*` scripts, `vitepress` and `vue`, the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md`; matching `BudgetGate/docs` PR for the two dashboard pages that mention them
+- [ ] D10: `CONTRIBUTING.md` written for this repo (Node, `npm ci`, lint, test, build)
 
 ## Phase 3: Show what core actually measures
 
-- [ ] D7: charts for CPU, read bytes, write bytes, and read/write entries (after core PR #9); handle `null` metrics; drop or hide memory
+- [ ] D7: charts for CPU, read bytes, write bytes, and read/write entries; handle `null` metrics; drop or hide memory
 - [ ] D8: validate `schema_version` on load with a clear error for unknown versions
 - [ ] Charts readable without color alone, with units on the axes
 
@@ -43,4 +47,6 @@ Last updated: 2026-10-26
 
 - [ ] Vercel: confirm the project redeploys from `main` after merges.
 - [ ] Branch protection on `main`: currently 0 required reviews and no required status checks. Consider requiring `Dashboard CI / build` once it runs tests.
-- [ ] Decide between this repo's VitePress `docs/` and the separate `BudgetGate/docs` site (the rules allow only one).
+- [x] Decide between this repo's VitePress `docs/` and the separate `BudgetGate/docs` site: `BudgetGate/docs` (2026-10-26, workspace PR #2).
+- [ ] Vercel: SPA fallback is not configured (`/docs` → 404). Moot once D9 removes the route; needed if client-side routes are added later.
+- [ ] Delete branches `docs/claude-md-and-roadmap` and `feature/complete-missing-specs`; both are fully in `main` (checked 2026-10-26).
