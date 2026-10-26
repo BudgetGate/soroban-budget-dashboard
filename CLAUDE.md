@@ -1,10 +1,12 @@
 # CLAUDE.md — soroban-budget-dashboard
 
-Scope: this repo only. If the workspace-level `CLAUDE.md` exists in the parent folder, read it as well. Where the two differ, this file wins for this repo. The defect table below was checked against `origin/main` on 2026-10-26. Re-verify an item before relying on it.
+Scope: this repo only. If the workspace-level `CLAUDE.md` exists in the parent folder, read it as well. Where the two differ, this file wins for this repo. The defect table below was checked against `origin/main` (`4fdd186`) on 2026-10-26. Re-verify an item before relying on it.
 
 ## 1. What this repo is
 
-The visualization layer of Budget Gate. A single-page React app deployed on Vercel at `budgetgate-dashboard.vercel.app`. It is meant to read the history of baseline snapshots from a Soroban contract repo through the GitHub API and chart how each function's CPU, read bytes, write bytes and footprint entries drift over commits. (Core records `memory_bytes` as `null` on current RPCs and stops comparing it once core PR #9 lands; see D7.)
+The visualization layer of Budget Gate. A single-page React app deployed on Vercel at `budgetgate-dashboard.vercel.app`. It is meant to read the history of baseline snapshots from a Soroban contract repo through the GitHub API and chart how each function's CPU, read bytes, write bytes and footprint entries drift over commits. (Core records `memory_bytes` as `null` on current RPCs and no longer compares it; see D7.)
+
+User docs live in the separate `BudgetGate/docs` site (budgetgate.github.io/docs/), which describes this repo as of `4fdd186`, including its sample data and limitations. This repo's own VitePress `docs/` and `/docs` route are being removed (D9). A PR here that changes what the app shows or how it loads data needs a matching docs PR, linked from both descriptions.
 
 It has no backend and no database. Everything it shows must come from GitHub or from clearly labeled sample data.
 
@@ -15,7 +17,7 @@ Boundaries:
 
 ## 2. Known layout
 
-State of `main` on 2026-10-26. `package.json` name is still `temp_vite` (D1). `type: module`, private.
+State of `main` (`4fdd186`) on 2026-10-26. `package.json` name is still `temp_vite` (D1). `type: module`, private.
 
 | Item | Detail (read unless stated) |
 |------|--------|
@@ -27,16 +29,16 @@ State of `main` on 2026-10-26. `package.json` name is still `temp_vite` (D1). `t
 | `index.html` | `<title>temp_vite</title>`. |
 | Tests | `src/App.test.tsx`, Vitest 4 + jsdom + Testing Library, 3 tests, all failing (D6). |
 | Lint | Oxlint, config in `.oxlintrc.json`. Passes. |
-| Docs site | VitePress 1.x, content in `docs/` (`index.md`, `guide/{index,getting-started,architecture}.md`). The `vue` dev dependency exists only for VitePress. Where the docs are deployed is unknown. A separate VitePress site also exists in the `BudgetGate/docs` repo. |
+| Docs site | VitePress 1.x, content in `docs/` (`index.md`, `guide/{index,getting-started,architecture}.md`). The `vue` dev dependency exists only for VitePress. Not deployed anywhere (the only workflow is `ci.yml`). Being removed in favour of `BudgetGate/docs` (D9). |
 | `.github/workflows/ci.yml` | `Dashboard CI`, job `build`: `npm ci`, `npm run build`. Does not run lint or tests. Runs on push/PR to `main` only. |
 | Config | `vite.config.ts`, `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json`. `dist/` is gitignored. |
-| Other | `DOCUMENTATION.md` (rendered at `/docs`), `PR_BODY.md`, `CONTRIBUTING.md`, `SECURITY.md`. `PR_BODY.md` not reviewed. |
+| Other | `DOCUMENTATION.md` (rendered at `/docs`; D9), `PR_BODY.md` (stale PR description for the Octokit change), `CONTRIBUTING.md` (core's copy: Go 1.21+, `go test`, nothing about this repo; D10), `SECURITY.md` (reporting address `security@budgetgate.io`, not checked to be deliverable; states the project is unaudited). |
 
 Scripts: `dev`, `build` (`tsc -b && vite build`), `lint` (`oxlint`), `preview`, `test` (`vitest run`), `docs:dev`, `docs:build`, `docs:preview`.
 
 ## 3. Known defects
 
-Checked 2026-10-26 against `origin/main`.
+Checked 2026-10-26 against `origin/main` (`4fdd186`).
 
 | ID | Defect | Evidence |
 |----|--------|----------|
@@ -46,17 +48,20 @@ Checked 2026-10-26 against `origin/main`.
 | D4 | With no data-source URL it silently shows hardcoded `MOCK_HISTORY`, not labelled as sample data. The "demo" button appends invented snapshots to the chart. Both break the "never present sample numbers as real" rule. | `src/api.ts:24,85`, `src/pages/Dashboard.tsx:80-100` |
 | D5 | Open design question: how data gets in. Unauthenticated GitHub REST calls from a browser are rate-limited, a token must never be bundled, and nothing in the pipeline produces the `history.json` the app expects (core writes one snapshot; the Action puts it in the Actions cache). Do not pick silently. | `src/api.ts`, design |
 | D6 | All 3 Vitest tests fail: they look for text that no longer exists ("Fetching telemetry data", "Error Fetching Data", "Resource Consumption"). CI runs only `npm run build`, so it stays green. | `npm test`, `.github/workflows/ci.yml` |
-| D7 | Only CPU and memory are charted; read and write bytes are never shown. Core now records `memory_bytes: null` (and stops comparing memory once core PR #9 lands); the aggregate view would sum `null` as 0. | `src/pages/Dashboard.tsx`, core `SCHEMA.md` |
+| D7 | Only CPU and memory are charted; read bytes, write bytes and footprint entries are never shown. Core records `memory_bytes: null` and no longer compares memory; the aggregate view sums `null` as 0. | `src/pages/Dashboard.tsx`, core `SCHEMA.md` |
 | D8 | No `schema_version` validation on load, no handling of 403/429 rate limits. | `src/api.ts` |
+| D9 | Two extra docs surfaces besides `BudgetGate/docs`: the VitePress site in `docs/` (not deployed; its getting-started page uses `@v1` and hand-made `new.json`), and the `/docs` route (`src/pages/Docs.tsx`) rendering `DOCUMENTATION.md`, which returns 404 on Vercel when opened directly (no SPA fallback). Remove `docs/`, the `docs:*` scripts, the `vitepress` and `vue` dependencies, the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md`; then update `dashboard/deployment.md` and `dashboard/documentation.md` in `BudgetGate/docs`. | `docs/`, `package.json`, `src/App.tsx`, `curl budgetgate-dashboard.vercel.app/docs` → 404 |
+| D10 | `CONTRIBUTING.md` is core's copy: Go 1.21+, `go mod download`, `go test`. Nothing about Node, `npm ci`, lint or tests in this repo. | `CONTRIBUTING.md` (identical to core's) |
 
 ## 4. Work order for this repo
 
 1. D3: open the live app and `npm run dev` in a browser; record what you see.
 2. D6: make the tests describe the current UI; add `npm run lint` and `npm test` to CI.
 3. D1, D4: real package name and title (regenerate `package-lock.json` after renaming); label sample data as "Sample data" in the UI, remove the fake demo snapshots.
-4. D7, D8: chart CPU, read bytes, write bytes (and footprint entries once core #9 lands); validate `schema_version`; handle `null` metrics.
-5. D5: decide the data source with the maintainer. Then wire GitHub reading, pagination and caching, and visible 403/429 handling.
-6. D2: README matches the app. Then per-function drill-down and trend alerting once real data flows.
+4. D9, D10: remove the extra docs surfaces; a CONTRIBUTING guide for this repo. Not blocked; can be done anytime.
+5. D7, D8: chart CPU, read bytes, write bytes and footprint entries; validate `schema_version`; handle `null` metrics.
+6. D5: decide the data source with the maintainer. Then wire GitHub reading, pagination and caching, and visible 403/429 handling.
+7. D2: README matches the app. Then per-function drill-down and trend alerting once real data flows.
 
 `roadmap.md` tracks progress against this list.
 
@@ -68,10 +73,10 @@ npm run dev
 npm run build       # tsc -b && vite build
 npm run lint        # oxlint
 npm test            # vitest run
-npm run docs:dev    # VitePress
+npm run docs:dev    # VitePress (to be removed, D9)
 npm run docs:build
 ```
-`npm run lint` (passes), `npm run build` (passes, chunk-size warning) and `npm test` (3 of 3 fail, D6) were run on 2026-10-26. `dev` and the `docs:*` scripts were not run.
+Run on `4fdd186` on 2026-10-26 (Windows, Node 24): `npm run lint` passes (exit 0), `npm run build` passes with a chunk-size warning, `npm test` 3 of 3 fail (D6). Live title still `temp_vite`. `dev` and the `docs:*` scripts were not run.
 
 ## 6. Rules
 
@@ -84,7 +89,7 @@ npm run docs:build
 - `strict` TypeScript. No `any` without a comment explaining why.
 - Anything in `VITE_*` environment variables ships to the browser. Never put a token there.
 - Do not write app code in Vue. It is a VitePress dependency only.
-- Docs live in `docs/` (VitePress). Do not start a second docs site.
+- User docs live in `BudgetGate/docs`. Do not add docs pages, a docs route or a docs site to this repo; `docs/` and `/docs` are being removed (D9). README, `CONTRIBUTING.md` and `SECURITY.md` stay here.
 - Charts must be readable without color alone and labeled with units.
 - Add a dependency only after checking that the existing stack cannot do the job.
 
