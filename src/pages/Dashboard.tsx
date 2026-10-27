@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Activity, CheckCircle2, AlertTriangle, Settings, RefreshCw, Zap, Server, Database, ChevronDown, Terminal, Play, X, Info, BookOpen } from 'lucide-react';
-import { fetchSnapshotHistory } from '../api';
+import { Activity, CheckCircle2, AlertTriangle, Settings, RefreshCw, Zap, Server, Database, ChevronDown, Terminal, Play, X, Info, BookOpen, Clock } from 'lucide-react';
+import { fetchSnapshotHistory, RateLimitError } from '../api';
 import type { SnapshotHistory, Snapshot } from '../api';
 import { toChartPoints } from '../metrics';
 import MetricChart from '../components/MetricChart';
@@ -9,7 +9,7 @@ import '../App.css';
 function Dashboard() {
   const [history, setHistory] = useState<SnapshotHistory | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
   const [selectedFunction, setSelectedFunction] = useState<string>('all');
   const [dataSourceUrl, setDataSourceUrl] = useState<string>('');
   const [tempUrl, setTempUrl] = useState<string>('');
@@ -39,7 +39,7 @@ function Dashboard() {
       })
       .catch(err => {
         if (isMounted) {
-          setError(err.message);
+          setError(err instanceof Error ? err : new Error(String(err)));
           setLoading(false);
         }
       });
@@ -228,11 +228,20 @@ function Dashboard() {
             <RefreshCw className="w-10 h-10 animate-spin mb-6 text-[#00ff9d]" />
             <p className="text-sm tracking-widest uppercase animate-pulse">Establishing connection...</p>
           </div>
+        ) : error instanceof RateLimitError ? (
+          <div className="glass-panel p-12 text-center text-[#00ff9d]">
+            <Clock className="w-12 h-12 mx-auto mb-4 opacity-60" />
+            <h2 className="text-xl font-bold mb-2 tracking-widest uppercase">RATE_LIMITED</h2>
+            <p className="text-sm text-[#00ff9d]/80">{error.message}</p>
+            <p className="text-sm text-[#00ff9d]/80 mt-2">
+              {error.retryAt ? `Try again after ${error.retryAt.toLocaleString()}.` : 'Try again later.'}
+            </p>
+          </div>
         ) : error ? (
           <div className="bg-[#ff0080]/10 border border-[#ff0080] p-8 text-center text-[#ff0080] backdrop-blur-xl shadow-[0_0_30px_rgba(255,0,128,0.2)]">
             <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-[#ff0080] animate-pulse" />
             <h2 className="text-xl font-bold mb-2 tracking-widest uppercase">CRITICAL SYSTEM ERROR</h2>
-            <p className="text-[#ff0080]/80 text-sm">{error}</p>
+            <p className="text-[#ff0080]/80 text-sm">{error.message}</p>
           </div>
         ) : !history || history.snapshots.length === 0 ? (
           <div className="glass-panel p-12 text-center text-[#00ff9d]/50">

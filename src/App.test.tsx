@@ -67,6 +67,18 @@ describe('Dashboard App UI Component', () => {
     expect(screen.getByText(errorMsg)).toBeInTheDocument();
   });
 
+  it('shows a rate-limited state with the retry time', async () => {
+    const retryAt = new Date(Date.UTC(2026, 9, 27, 13, 0, 0));
+    fetchHistory.mockRejectedValue(new api.RateLimitError('The data source is rate-limiting requests (HTTP 403).', retryAt));
+
+    render(<App />);
+
+    expect(await screen.findByText('RATE_LIMITED')).toBeInTheDocument();
+    expect(screen.getByText('The data source is rate-limiting requests (HTTP 403).')).toBeInTheDocument();
+    expect(screen.getByText(`Try again after ${retryAt.toLocaleString()}.`)).toBeInTheDocument();
+    expect(screen.queryByText('CRITICAL SYSTEM ERROR')).not.toBeInTheDocument();
+  });
+
   it('shows the empty state when the history has no snapshots', async () => {
     fetchHistory.mockResolvedValue({ snapshots: [] });
 

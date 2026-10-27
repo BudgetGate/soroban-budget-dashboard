@@ -82,11 +82,92 @@ const MOCK_HISTORY: SnapshotHistory = {
 
 import { Octokit } from '@octokit/rest';
 
+// Versions of core's snapshot schema (soroban-budget-core SCHEMA.md) this
+// dashboard can read. Any other version is rejected rather than guessed at.
+export const SUPPORTED_SCHEMA_VERSIONS = ['1.0', '2.0'];
+
+export class RateLimitError extends Error {
+  // When the data source says requests will be accepted again, if it said.
+  readonly retryAt: Date | null;
+
+  constructor(message: string, retryAt: Date | null) {
+    super(message);
+    this.name = 'RateLimitError';
+    this.retryAt = retryAt;
+  }
+}
+
+type HeaderLookup = (name: string) => string | null;
+
+// GitHub signals a rate limit with 403 or 429: x-ratelimit-remaining is 0 for
+// the primary limit (x-ratelimit-reset is the reset time in epoch seconds), and
+// a secondary limit says so in the message, sometimes with retry-after seconds.
+// Any other 403 is not a rate limit.
+export function rateLimitFrom(status: number, header: HeaderLookup, message: string, now = Date.now()): RateLimitError | null {
+  if (status !== 403 && status !== 429) return null;
+  const text = `The data source is rate-limiting requests (HTTP ${status}).`;
+  const reset = Number(header('x-ratelimit-reset'));
+  if (header('x-ratelimit-remaining') === '0' && reset > 0) {
+    return new RateLimitError(text, new Date(reset * 1000));
+  }
+  const retryAfter = Number(header('retry-after'));
+  if (retryAfter > 0) {
+    return new RateLimitError(text, new Date(now + retryAfter * 1000));
+  }
+  if (status === 429 || /rate limit/i.test(message)) {
+    return new RateLimitError(text, null);
+  }
+  return null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+// Checks the history's shape and every snapshot's schema_version before any
+// field is used.
+export function parseHistory(data: unknown): SnapshotHistory {
+  if (!isRecord(data) || !Array.isArray(data.snapshots)) {
+    throw new Error('The data source is not a snapshot history: expected an object with a "snapshots" array.');
+  }
+  const supported = SUPPORTED_SCHEMA_VERSIONS.join(', ');
+  data.snapshots.forEach((snapshot: unknown, i: number) => {
+    if (!isRecord(snapshot)) {
+      throw new Error(`Snapshot ${i + 1} is not an object.`);
+    }
+    const commit = typeof snapshot.commit_sha === 'string' && snapshot.commit_sha !== ''
+      ? ` (commit ${snapshot.commit_sha.substring(0, 7)})`
+      : '';
+    const version = snapshot.schema_version;
+    if (typeof version !== 'string' || version === '') {
+      throw new Error(`Snapshot ${i + 1}${commit} has no schema_version. Supported versions: ${supported}.`);
+    }
+    if (!SUPPORTED_SCHEMA_VERSIONS.includes(version)) {
+      throw new Error(`Snapshot ${i + 1}${commit} has schema_version "${version}", which this dashboard does not support. Supported versions: ${supported}.`);
+    }
+    if (!Array.isArray(snapshot.functions)) {
+      throw new Error(`Snapshot ${i + 1}${commit} has no "functions" array.`);
+    }
+  });
+  // The checks above cover what the dashboard relies on before reading fields.
+  return data as unknown as SnapshotHistory;
+}
+
+interface OctokitRequestError {
+  status: number;
+  message: string;
+  response?: { headers: Record<string, string | number | undefined> };
+}
+
+function isOctokitRequestError(error: unknown): error is OctokitRequestError {
+  return isRecord(error) && typeof error.status === 'number' && typeof error.message === 'string';
+}
+
 export async function fetchSnapshotHistory(dataSourceUrl?: string): Promise<SnapshotHistory> {
   if (!dataSourceUrl) {
     // Fallback to mock data if no URL is provided
     return new Promise((resolve) => {
-      setTimeout(() => resolve(MOCK_HISTORY), 500);
+      setTimeout(() => resolve(parseHistory(MOCK_HISTORY)), 500);
     });
   }
 
@@ -101,6 +182,7 @@ export async function fetchSnapshotHistory(dataSourceUrl?: string): Promise<Snap
       const path = parts.slice(3).join('/');
 
       const octokit = new Octokit();
+      let content: string;
       try {
         const response = await octokit.rest.repos.getContent({
           owner,
@@ -109,14 +191,23 @@ export async function fetchSnapshotHistory(dataSourceUrl?: string): Promise<Snap
           ref,
         });
 
-        if (!Array.isArray(response.data) && response.data.type === 'file' && response.data.content) {
-          const decodedContent = atob(response.data.content);
-          return JSON.parse(decodedContent) as SnapshotHistory;
+        if (Array.isArray(response.data) || response.data.type !== 'file' || !response.data.content) {
+          throw new Error('Not a valid file');
         }
-        throw new Error('Not a valid file');
-      } catch (error: any) {
-        throw new Error(`GitHub API fetch failed: ${error.message}`);
+        content = atob(response.data.content);
+      } catch (error: unknown) {
+        if (isOctokitRequestError(error)) {
+          const headers = error.response?.headers ?? {};
+          const rateLimit = rateLimitFrom(error.status, name => {
+            const value = headers[name];
+            return value === undefined ? null : String(value);
+          }, error.message);
+          if (rateLimit) throw rateLimit;
+        }
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`GitHub API fetch failed: ${message}`);
       }
+      return parseHistory(JSON.parse(content));
     } else {
       throw new Error('Invalid github:// URL format. Expected github://owner/repo/branch/path');
     }
@@ -125,7 +216,9 @@ export async function fetchSnapshotHistory(dataSourceUrl?: string): Promise<Snap
   // Standard fetch for normal URLs
   const response = await fetch(dataSourceUrl);
   if (!response.ok) {
+    const rateLimit = rateLimitFrom(response.status, name => response.headers.get(name), response.statusText);
+    if (rateLimit) throw rateLimit;
     throw new Error(`Failed to fetch history: ${response.statusText}`);
   }
-  return response.json();
+  return parseHistory(await response.json());
 }
