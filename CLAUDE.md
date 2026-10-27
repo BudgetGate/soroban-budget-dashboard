@@ -42,16 +42,17 @@ Checked 2026-10-26 against `origin/main` (`4fdd186`).
 
 | ID | Defect | Evidence |
 |----|--------|----------|
-| D1 | Package name and page `<title>` are `temp_vite`. The live page at budgetgate-dashboard.vercel.app also has title `temp_vite`. | `package.json`, `index.html:7`, live fetch |
-| D2 | README was rewritten (not the Vite template any more) but describes Memory as a tracked metric and a "cyberpunk" UI; check it against the app once D3 is done. | `README.md` |
-| D3 | What the deployed app renders was not checked in a browser. | — |
-| D4 | With no data-source URL it silently shows hardcoded `MOCK_HISTORY`, not labelled as sample data. The "demo" button appends invented snapshots to the chart. Both break the "never present sample numbers as real" rule. | `src/api.ts:24,85`, `src/pages/Dashboard.tsx:80-100` |
+| D1 | Package name and page `<title>` are `temp_vite`. The live page at budgetgate-dashboard.vercel.app also has title `temp_vite` (headless Chrome, 2026-10-27, `main` `b6e4134`). | `package.json`, `index.html:7`, live page |
+| D2 | README was rewritten (not the Vite template any more) but describes Memory as a tracked metric and a "cyberpunk" UI. Check it against what the live app renders (D3 notes in `roadmap.md`). | `README.md` |
+| D4 | With no data-source URL it silently shows hardcoded `MOCK_HISTORY`, not labelled as sample data; the live page opens on it (commits `a1b2c3d`…`e5f6g7h`, not even hex; GEN_TIME 8/6/2026). The "RUN DEMO BUDGET TEST" button plays a scripted terminal log that imitates core (`budget-core simulate --fixture "liquidity_pool_v2"`, "Running execution trace on 145 transactions", "Memory usage +15%"; core has no `simulate` command and no memory comparison), then appends an invented snapshot (commit `d3m0b4d…`) that flips the card to "Regression Detected". Both break the "never present sample numbers as real" rule. | `src/api.ts:28,170`, `src/pages/Dashboard.tsx:53-104`; live page 2026-10-27 |
+| D13 | The header shows a pulsing "TESTNET_SYNC_ACTIVE" badge (screens ≥ `lg` only). Nothing syncs with testnet: the app only reads a history file. A false status claim. | `src/pages/Dashboard.tsx:220`; live page 2026-10-27 |
+| D14 | At 390 px wide the `h1` "SYS.BudgetGate" is 294 px wide but its right edge is at 409 px, so the header's `overflow-hidden` clips it to "SYS.BUDGETGA". The page itself does not scroll sideways (`scrollWidth` 390). | `src/pages/Dashboard.tsx:169,175`; live page 2026-10-27 |
 | D5 | Open design question: how data gets in. Unauthenticated GitHub REST calls from a browser are rate-limited, a token must never be bundled, and nothing in the pipeline produces the `history.json` the app expects (core writes one snapshot; the Action puts it in the Actions cache). Do not pick silently. | `src/api.ts`, design |
 
 ## 4. Work order for this repo
 
-1. D3: open the live app and `npm run dev` in a browser; record what you see.
-2. D1, D4: real package name and title (regenerate `package-lock.json` after renaming); label sample data as "Sample data" in the UI, remove the fake demo snapshots.
+1. D1, D4, D13: real package name and title (regenerate `package-lock.json` after renaming); label sample data as "Sample data" in the UI; remove the demo button with its scripted log and fake snapshots; remove the TESTNET_SYNC_ACTIVE badge.
+2. D14: header fits a 390 px screen.
 3. D5: decide the data source with the maintainer. Then wire GitHub reading, pagination and caching.
 4. D2: README matches the app. Then per-function drill-down and trend alerting once real data flows.
 
