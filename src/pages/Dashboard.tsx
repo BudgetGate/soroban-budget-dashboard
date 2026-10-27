@@ -106,13 +106,6 @@ function Dashboard() {
               <RefreshCw className="w-4 h-4" />
             </button>
           </div>
-          <span className="hidden lg:flex items-center gap-2 bg-[#00ff9d]/10 text-[#00ff9d] px-4 py-3 border border-[#00ff9d]/30 whitespace-nowrap font-mono text-xs shadow-[0_0_10px_rgba(0,255,157,0.1)] uppercase">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full bg-[#00ff9d] opacity-75"></span>
-              <span className="relative inline-flex h-2.5 w-2.5 bg-[#00ff9d]"></span>
-            </span>
-            TESTNET_SYNC_ACTIVE
-          </span>
         </div>
       </header>
 
