@@ -6,7 +6,7 @@ Last updated: 2026-10-27
 
 ## Where I left off
 
-- `main` is at `b6e4134` (after #13). Lint and build pass.
+- `main` is at `e2da1be` (after #14). Lint and build pass.
 - D9 done: `docs/`, the `docs:*` scripts, `vitepress`, `vue`, `react-markdown` (only `Docs.tsx` used it), the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md` are gone. READ DOCS links to budgetgate.github.io/docs/dashboard/; the EXTERNAL DOCS button (pointing at the stale Vercel copy) is removed.
 - Found during D9: `docs/` was deployed after all, by a second Vercel project `budgetgate-docs` (D11). The maintainer deleted that project on 2026-10-27; budgetgate-docs.vercel.app now returns `DEPLOYMENT_NOT_FOUND`, and commits get only the app's `Vercel` status.
 - D6 done: the 6 tests describe the current UI and pass; CI runs lint and tests before the build.
@@ -14,18 +14,28 @@ Last updated: 2026-10-27
 - D10 done: `CONTRIBUTING.md` describes this repo (Node 24, `npm ci`, lint, test, build, the section 6 rules, PR checklist) instead of core's Go guide.
 - D7 done: three charts (CPU instructions; read/write bytes; footprint entries), units on the axes, dashed second series, memory dropped, unknown values drawn as gaps instead of 0. Checked in headless Chrome against `npm run dev` with sample data and with a two-snapshot history measured by core on testnet (counter v1 → v2).
 - D8 done: every history is checked before use (shape, `schema_version` `1.0`/`2.0`, `functions` array) with an error naming the snapshot; a 403/429 that GitHub's rules mark as a rate limit shows a RATE_LIMITED screen with the retry time. Checked in headless Chrome: real history, a `3.0` snapshot, a local 403 with `x-ratelimit-remaining: 0`, and a real `github://` read of a non-history file.
+- D3 done (2026-10-27): headless Chrome against budgetgate-dashboard.vercel.app, which serves `b6e4134` (its JS bundle contains the D7/D8 strings). What renders:
+  - Title `temp_vite` (D1). Header: SYS.BUDGETGATE, "SOROBAN RESOURCE MONITOR_V2.0", READ DOCS (→ budgetgate.github.io/docs/dashboard/), RUN DEMO BUDGET TEST, the DATASOURCE_URL box, and a pulsing TESTNET_SYNC_ACTIVE badge on wide screens (D13).
+  - It opens on the built-in sample, with no label (D4): 5 snapshots `a1b2c3d`…`e5f6g7h`, 2 functions (mint, transfer), "Clear", GEN_TIME 8/6/2026.
+  - Telemetry guide cards for CPU, bytes and entries. CPU and bytes charts draw; entries say "Not reported in these snapshots".
+  - The function filter switches to one function. The demo button plays a scripted terminal log imitating core, then adds commit `d3m0b4d…` and shows "Regression Detected" (D4).
+  - At 390 px: everything stacks, no sideways scroll, charts readable, but the heading is clipped to "SYS.BUDGETGA" (D14).
+  - No console errors or warnings and no failed requests.
+  - `npm run dev` was checked the same way during D7 and D8.
 - D1, D4 and D13 done in one PR: package `soroban-budget-dashboard`, title "Budget Gate dashboard" (lockfile changed only in its two `name` fields; `npm ci` accepts it); a "Sample data" note whenever the built-in history is shown; the demo button, its scripted terminal and fake snapshots, and the TESTNET_SYNC_ACTIVE badge are gone. Checked in headless Chrome on `npm run dev` at 1280 and 390 px, and with the real counter history (note gone, title kept).
 - Next up: confirm the live site after the Vercel deploy; then D14 (header at 390 px). D5 needs a maintainer decision.
 
 ## Phase 1: See what exists, make CI honest
 
-- [ ] D3: open the live app and `npm run dev` in a browser; write down what renders
+- [x] D3: open the live app and `npm run dev` in a browser; write down what renders
 - [x] D6: tests that match the current UI; CI runs `npm run lint` and `npm test` as well as `build`
 - [x] D12: CI on `actions/checkout@v7`, `setup-node@v7` and Node 24
 
 ## Phase 2: Identity and honesty
 
 - [x] D1: real package name and `<title>`; regenerate `package-lock.json`
+- [x] D13: remove the TESTNET_SYNC_ACTIVE badge
+- [ ] D14: header heading fits at 390 px
 - [x] D4: "Sample data" label on the built-in history; remove the demo button that invents snapshots
 - [ ] Redeploy and confirm in a browser that the live title and content changed
 - [x] D9: remove `docs/`, the `docs:*` scripts, `vitepress` and `vue`, the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md`; matching `BudgetGate/docs` PR for the two dashboard pages that mention them
