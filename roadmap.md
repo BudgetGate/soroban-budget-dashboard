@@ -6,7 +6,7 @@ Last updated: 2026-10-27
 
 ## Where I left off
 
-- `main` is at `3ada555` (after #15). Lint and build pass.
+- `main` is at `0a61e74` (after #16). Lint and build pass.
 - D9 done: `docs/`, the `docs:*` scripts, `vitepress`, `vue`, `react-markdown` (only `Docs.tsx` used it), the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md` are gone. READ DOCS links to budgetgate.github.io/docs/dashboard/; the EXTERNAL DOCS button (pointing at the stale Vercel copy) is removed.
 - Found during D9: `docs/` was deployed after all, by a second Vercel project `budgetgate-docs` (D11). The maintainer deleted that project on 2026-10-27; budgetgate-docs.vercel.app now returns `DEPLOYMENT_NOT_FOUND`, and commits get only the app's `Vercel` status.
 - D6 done: the 6 tests describe the current UI and pass; CI runs lint and tests before the build.
@@ -25,7 +25,8 @@ Last updated: 2026-10-27
 - D1, D4 and D13 done in one PR: package `soroban-budget-dashboard`, title "Budget Gate dashboard" (lockfile changed only in its two `name` fields; `npm ci` accepts it); a "Sample data" note whenever the built-in history is shown; the demo button, its scripted terminal and fake snapshots, and the TESTNET_SYNC_ACTIVE badge are gone. Checked in headless Chrome on `npm run dev` at 1280 and 390 px, and with the real counter history (note gone, title kept).
 - Live site checked after #15 deployed (headless Chrome, 320/390/768/1280 px): title "Budget Gate dashboard", Sample data note shown, no demo button, no TESTNET_SYNC_ACTIVE badge.
 - D14 done: below `md` the heading is 24 px with `tracking-wider` and may wrap; from `md` up it keeps 30 px/`tracking-widest` and does not shrink. Measured on `npm run dev`: right edge 349 px inside a 350 px box at 390 px (one line), wraps to two lines at 320 px, one line at 768 and 1280 px.
-- Next up: D2 (README against the app). D5 needs a maintainer decision.
+- D2 done: README rewritten against the app and the D3/D4/D7/D8 behaviour: what it shows, the `https://` and `github://` sources, the Sample data note, the three charts, the CPU-only 10% regression card, errors and RATE_LIMITED, the missing history producer, Node 24 and `npm ci`, Vercel previews and deploys; links checked (all 200). Dropped: Memory as a metric, "stores", "Cyberpunk UI", the claim that the Action commits history the app reads, Node 18+, yarn, the broken `../CONTRIBUTING.md` link and the nonexistent code of conduct.
+- Next up: D5 (data source) needs a maintainer decision. No other open defects in this repo.
 
 ## Phase 1: See what exists, make CI honest
 
@@ -57,7 +58,7 @@ Last updated: 2026-10-27
 
 ## Phase 5: Polish
 
-- [ ] D2: README matches the app
+- [x] D2: README matches the app
 - [ ] Per-function drill-down
 - [ ] Trend alerting across several commits (functions trending toward a cap)
 
