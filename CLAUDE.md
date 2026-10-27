@@ -4,7 +4,7 @@ Scope: this repo only. If the workspace-level `CLAUDE.md` exists in the parent f
 
 ## 1. What this repo is
 
-The visualization layer of Budget Gate. A single-page React app deployed on Vercel at `budgetgate-dashboard.vercel.app`. It is meant to read the history of baseline snapshots from a Soroban contract repo through the GitHub API and chart how each function's CPU, read bytes, write bytes and footprint entries drift over commits. (Core records `memory_bytes` as `null` on current RPCs and no longer compares it; see D7.)
+The visualization layer of Budget Gate. A single-page React app deployed on Vercel at `budgetgate-dashboard.vercel.app`. It is meant to read the history of baseline snapshots from a Soroban contract repo through the GitHub API and chart how each function's CPU, read bytes, write bytes and footprint entries drift over commits. (Core records `memory_bytes` as `null` on current RPCs and no longer compares it, so the dashboard does not chart it.)
 
 User docs live in the separate `BudgetGate/docs` site (budgetgate.github.io/docs/), which describes this repo as of `4fdd186`, including its sample data and limitations. This repo has no docs pages of its own (D9 removed `docs/`, the `/docs` route and `DOCUMENTATION.md`); the app's READ DOCS button links to budgetgate.github.io/docs/dashboard/. A PR here that changes what the app shows or how it loads data needs a matching docs PR, linked from both descriptions.
 
@@ -23,10 +23,12 @@ State of `main` (`4fdd186`) on 2026-10-26. `package.json` name is still `temp_vi
 |------|--------|
 | App stack | React 19, Vite 8 (`@vitejs/plugin-react`), TypeScript ~6.0, Tailwind 4 (`@tailwindcss/vite`), `react-router-dom` 7, `recharts` 3, `@octokit/rest` 22, `lucide-react` |
 | `src/App.tsx` | One route: `/` → `Dashboard`. |
-| `src/api.ts` | `SnapshotFunction`/`Snapshot`/`SnapshotHistory` types (schema 1.0 fields, `memory_bytes: number`). `fetchSnapshotHistory(url)`: no URL → hardcoded `MOCK_HISTORY` after 500 ms; `github://owner/repo/ref/path` → unauthenticated Octokit `getContent`; otherwise `fetch(url)`. No `schema_version` check, no 403/429 handling. |
-| `src/pages/Dashboard.tsx` | ~450 lines. Data-source URL input, stat panels (latest commit, regression state, tracked functions), function selector, Recharts line chart of CPU and memory, a single-commit >10% CPU jump check, and a "demo" button that appends a fake snapshot (+25% CPU, +15% memory). |
+| `src/api.ts` | `SnapshotFunction`/`Snapshot`/`SnapshotHistory` types (schema 2.0 fields: `memory_bytes: number | null`, optional `read_entries`/`write_entries` that may be `null`). `fetchSnapshotHistory(url)`: no URL → hardcoded `MOCK_HISTORY` after 500 ms; `github://owner/repo/ref/path` → unauthenticated Octokit `getContent`; otherwise `fetch(url)`. No `schema_version` check, no 403/429 handling. |
+| `src/pages/Dashboard.tsx` | ~450 lines. Data-source URL input, stat panels (latest commit, regression state, tracked functions), function selector, three `MetricChart`s (CPU instructions; read/write bytes; all/read-write footprint entries), each with its unit on the y-axis and the second series dashed, a single-commit >10% CPU jump check, and a "demo" button that appends a fake snapshot (+25% CPU, +15% memory). |
+| `src/metrics.ts` | `metricValue`/`toChartPoints`: a metric per snapshot for one function or the sum over all. `null` when the function is missing or any value is unreported; a sum is never taken over a partial set. Memory is not charted (core records it as `null`). |
+| `src/components/MetricChart.tsx` | One Recharts step-line chart per unit. Says "Not reported in these snapshots" instead of drawing an empty chart. |
 | `index.html` | `<title>temp_vite</title>`. |
-| Tests | `src/App.test.tsx`, Vitest 4 + jsdom + Testing Library, 6 tests: loading, error, empty history, loaded history with the function filter, and the 10% CPU regression threshold on both sides. `fetchSnapshotHistory` is mocked with typed `Snapshot` data (no `any`); `npm run build` type-checks this file. |
+| Tests | `src/App.test.tsx`, Vitest 4 + jsdom + Testing Library, `src/metrics.test.ts`, 17 tests in all: loading, error, empty history, loaded history with the function filter, the three charts with entries shown as not reported, the 10% CPU regression threshold on both sides, and table-driven `metricValue` cases (sum, selection, missing function, `null`/absent values, partial sums, real zeros). `fetchSnapshotHistory` is mocked with typed `Snapshot` data (no `any`); `npm run build` type-checks this file. |
 | Lint | Oxlint, config in `.oxlintrc.json`. Passes. |
 | `.github/workflows/ci.yml` | `Dashboard CI`, job `build`: `npm ci`, `npm run lint`, `npm test`, `npm run build`. Node 24, `actions/checkout@v7`, `setup-node@v7` (both `node24`). Runs on push/PR to `main` only. |
 | Config | `vite.config.ts`, `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json`. `dist/` is gitignored. |
@@ -45,14 +47,13 @@ Checked 2026-10-26 against `origin/main` (`4fdd186`).
 | D3 | What the deployed app renders was not checked in a browser. | — |
 | D4 | With no data-source URL it silently shows hardcoded `MOCK_HISTORY`, not labelled as sample data. The "demo" button appends invented snapshots to the chart. Both break the "never present sample numbers as real" rule. | `src/api.ts:24,85`, `src/pages/Dashboard.tsx:80-100` |
 | D5 | Open design question: how data gets in. Unauthenticated GitHub REST calls from a browser are rate-limited, a token must never be bundled, and nothing in the pipeline produces the `history.json` the app expects (core writes one snapshot; the Action puts it in the Actions cache). Do not pick silently. | `src/api.ts`, design |
-| D7 | Only CPU and memory are charted; read bytes, write bytes and footprint entries are never shown. Core records `memory_bytes: null` and no longer compares memory; the aggregate view sums `null` as 0. | `src/pages/Dashboard.tsx`, core `SCHEMA.md` |
 | D8 | No `schema_version` validation on load, no handling of 403/429 rate limits. | `src/api.ts` |
 
 ## 4. Work order for this repo
 
 1. D3: open the live app and `npm run dev` in a browser; record what you see.
 2. D1, D4: real package name and title (regenerate `package-lock.json` after renaming); label sample data as "Sample data" in the UI, remove the fake demo snapshots.
-3. D7, D8: chart CPU, read bytes, write bytes and footprint entries; validate `schema_version`; handle `null` metrics.
+3. D8: validate `schema_version`; handle 403/429.
 4. D5: decide the data source with the maintainer. Then wire GitHub reading, pagination and caching, and visible 403/429 handling.
 5. D2: README matches the app. Then per-function drill-down and trend alerting once real data flows.
 
