@@ -3,7 +3,6 @@ import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area
 import { Activity, CheckCircle2, AlertTriangle, Settings, RefreshCw, Zap, Server, Database, ChevronDown, Terminal, Play, X, Info, BookOpen } from 'lucide-react';
 import { fetchSnapshotHistory } from '../api';
 import type { SnapshotHistory, Snapshot } from '../api';
-import { Link } from 'react-router-dom';
 import '../App.css';
 
 function Dashboard() {
@@ -201,22 +200,14 @@ function Dashboard() {
         </div>
         
         <div className="flex items-center gap-4 text-sm w-full md:w-auto relative z-10 flex-wrap">
-          <Link 
-            to="/docs"
+          <a 
+            href="https://budgetgate.github.io/docs/dashboard/"
+            target="_blank"
+            rel="noopener noreferrer"
             className="glass-button px-4 py-3 flex items-center justify-center gap-2 whitespace-nowrap"
           >
             <BookOpen className="w-4 h-4" />
             READ DOCS
-          </Link>
-
-          <a 
-            href="https://budgetgate-docs.vercel.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="glass-button px-4 py-3 flex items-center justify-center gap-2 whitespace-nowrap text-[#00ff9d] hover:text-[#ff0080]"
-          >
-            <Activity className="w-4 h-4" />
-            EXTERNAL DOCS
           </a>
           
           <button 
