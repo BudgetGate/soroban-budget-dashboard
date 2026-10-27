@@ -43,14 +43,12 @@ Checked 2026-10-26 against `origin/main` (`4fdd186`).
 | ID | Defect | Evidence |
 |----|--------|----------|
 | D2 | README was rewritten (not the Vite template any more) but describes Memory as a tracked metric and a "cyberpunk" UI. Check it against what the live app renders (D3 notes in `roadmap.md`). | `README.md` |
-| D14 | At 390 px wide the `h1` "SYS.BudgetGate" is 294 px wide but its right edge is at 409 px, so the header's `overflow-hidden` clips it to "SYS.BUDGETGA". The page itself does not scroll sideways (`scrollWidth` 390). | `src/pages/Dashboard.tsx:169,175`; live page 2026-10-27 |
 | D5 | Open design question: how data gets in. Unauthenticated GitHub REST calls from a browser are rate-limited, a token must never be bundled, and nothing in the pipeline produces the `history.json` the app expects (core writes one snapshot; the Action puts it in the Actions cache). Do not pick silently. | `src/api.ts`, design |
 
 ## 4. Work order for this repo
 
-1. D14: header fits a 390 px screen.
-2. D5: decide the data source with the maintainer. Then wire GitHub reading, pagination and caching.
-3. D2: README matches the app. Then per-function drill-down and trend alerting once real data flows.
+1. D5: decide the data source with the maintainer. Then wire GitHub reading, pagination and caching.
+2. D2: README matches the app. Then per-function drill-down and trend alerting once real data flows.
 
 `roadmap.md` tracks progress against this list.
 

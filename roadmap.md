@@ -6,7 +6,7 @@ Last updated: 2026-10-27
 
 ## Where I left off
 
-- `main` is at `e2da1be` (after #14). Lint and build pass.
+- `main` is at `3ada555` (after #15). Lint and build pass.
 - D9 done: `docs/`, the `docs:*` scripts, `vitepress`, `vue`, `react-markdown` (only `Docs.tsx` used it), the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md` are gone. READ DOCS links to budgetgate.github.io/docs/dashboard/; the EXTERNAL DOCS button (pointing at the stale Vercel copy) is removed.
 - Found during D9: `docs/` was deployed after all, by a second Vercel project `budgetgate-docs` (D11). The maintainer deleted that project on 2026-10-27; budgetgate-docs.vercel.app now returns `DEPLOYMENT_NOT_FOUND`, and commits get only the app's `Vercel` status.
 - D6 done: the 6 tests describe the current UI and pass; CI runs lint and tests before the build.
@@ -23,7 +23,9 @@ Last updated: 2026-10-27
   - No console errors or warnings and no failed requests.
   - `npm run dev` was checked the same way during D7 and D8.
 - D1, D4 and D13 done in one PR: package `soroban-budget-dashboard`, title "Budget Gate dashboard" (lockfile changed only in its two `name` fields; `npm ci` accepts it); a "Sample data" note whenever the built-in history is shown; the demo button, its scripted terminal and fake snapshots, and the TESTNET_SYNC_ACTIVE badge are gone. Checked in headless Chrome on `npm run dev` at 1280 and 390 px, and with the real counter history (note gone, title kept).
-- Next up: confirm the live site after the Vercel deploy; then D14 (header at 390 px). D5 needs a maintainer decision.
+- Live site checked after #15 deployed (headless Chrome, 320/390/768/1280 px): title "Budget Gate dashboard", Sample data note shown, no demo button, no TESTNET_SYNC_ACTIVE badge.
+- D14 done: below `md` the heading is 24 px with `tracking-wider` and may wrap; from `md` up it keeps 30 px/`tracking-widest` and does not shrink. Measured on `npm run dev`: right edge 349 px inside a 350 px box at 390 px (one line), wraps to two lines at 320 px, one line at 768 and 1280 px.
+- Next up: D2 (README against the app). D5 needs a maintainer decision.
 
 ## Phase 1: See what exists, make CI honest
 
@@ -35,9 +37,9 @@ Last updated: 2026-10-27
 
 - [x] D1: real package name and `<title>`; regenerate `package-lock.json`
 - [x] D13: remove the TESTNET_SYNC_ACTIVE badge
-- [ ] D14: header heading fits at 390 px
+- [x] D14: header heading fits at 390 px
 - [x] D4: "Sample data" label on the built-in history; remove the demo button that invents snapshots
-- [ ] Redeploy and confirm in a browser that the live title and content changed
+- [x] Redeploy and confirm in a browser that the live title and content changed (2026-10-27, after #15: title "Budget Gate dashboard", Sample data note, no demo or badge)
 - [x] D9: remove `docs/`, the `docs:*` scripts, `vitepress` and `vue`, the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md`; matching `BudgetGate/docs` PR for the two dashboard pages that mention them
 - [x] D10: `CONTRIBUTING.md` written for this repo (Node, `npm ci`, lint, test, build)
 
