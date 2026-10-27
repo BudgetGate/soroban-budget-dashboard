@@ -2,9 +2,13 @@ export interface SnapshotFunction {
   name: string;
   fixture_id: string;
   cpu_instructions: number;
-  memory_bytes: number;
+  // null when the RPC did not report memory (core SCHEMA.md 2.0).
+  memory_bytes: number | null;
   read_bytes: number;
   write_bytes: number;
+  // null or absent in snapshots written before core counted footprint entries.
+  read_entries?: number | null;
+  write_entries?: number | null;
   pct_of_network_cap: number;
 }
 

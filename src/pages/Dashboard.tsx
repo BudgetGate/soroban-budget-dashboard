@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { Activity, CheckCircle2, AlertTriangle, Settings, RefreshCw, Zap, Server, Database, ChevronDown, Terminal, Play, X, Info, BookOpen } from 'lucide-react';
 import { fetchSnapshotHistory } from '../api';
 import type { SnapshotHistory, Snapshot } from '../api';
+import { toChartPoints } from '../metrics';
+import MetricChart from '../components/MetricChart';
 import '../App.css';
 
 function Dashboard() {
@@ -89,7 +90,7 @@ function Dashboard() {
               return {
                 ...f,
                 cpu_instructions: Math.floor(f.cpu_instructions * 1.25),
-                memory_bytes: Math.floor(f.memory_bytes * 1.15)
+                memory_bytes: f.memory_bytes === null ? null : Math.floor(f.memory_bytes * 1.15)
               };
             })
           };
@@ -109,33 +110,10 @@ function Dashboard() {
     return Array.from(funcs);
   }, [history]);
 
-  const chartData = useMemo(() => {
-    if (!history) return [];
-    return history.snapshots.map(snapshot => {
-      const point: any = { commit: snapshot.commit_sha.substring(0, 7) };
-      
-      if (selectedFunction === 'all') {
-        let totalCpu = 0;
-        let totalMem = 0;
-        snapshot.functions.forEach(f => {
-          totalCpu += f.cpu_instructions;
-          totalMem += f.memory_bytes;
-        });
-        point.cpu = totalCpu;
-        point.memory = totalMem;
-      } else {
-        const fn = snapshot.functions.find(f => f.name === selectedFunction);
-        if (fn) {
-          point.cpu = fn.cpu_instructions;
-          point.memory = fn.memory_bytes;
-        } else {
-          point.cpu = 0;
-          point.memory = 0;
-        }
-      }
-      return point;
-    });
-  }, [history, selectedFunction]);
+  const chartData = useMemo(
+    () => (history ? toChartPoints(history.snapshots, selectedFunction) : []),
+    [history, selectedFunction]
+  );
 
   const latestSnapshot = history?.snapshots[history.snapshots.length - 1];
   const previousSnapshot = history?.snapshots[history.snapshots.length - 2];
@@ -271,12 +249,15 @@ function Dashboard() {
                 <Info className="w-5 h-5" />
                 <h2 className="text-sm font-bold tracking-widest uppercase">SYS.MANUAL // Telemetry Guide</h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-[#00ff9d]/80 font-mono leading-relaxed relative z-10">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-[#00ff9d]/80 font-mono leading-relaxed relative z-10">
                 <div className="bg-[#00ff9d]/5 p-4 border-l-2 border-[#00ff9d]">
                   <p><strong className="text-[#00ff9d] block mb-1 uppercase tracking-wider">CPU_INSTRUCTIONS:</strong> Soroban limits the total compute operations per transaction to ensure network stability. High CPU usage means your smart contract is computationally expensive and will cost more fees to execute.</p>
                 </div>
+                <div className="bg-[#00ff9d]/5 p-4 border-l-2 border-[#00ff9d]">
+                  <p><strong className="text-[#00ff9d] block mb-1 uppercase tracking-wider">READ_BYTES / WRITE_BYTES:</strong> Ledger data read from disk and written by the transaction. Since protocol 23, read bytes leave out reads of live contract storage, so a new storage read may not move this number.</p>
+                </div>
                 <div className="bg-[#ff0080]/5 p-4 border-l-2 border-[#ff0080]">
-                  <p><strong className="text-[#ff0080] block mb-1 uppercase tracking-wider">MEMORY_BYTES:</strong> Represents the peak RAM allocated during contract execution. Exceeding Soroban's memory limits will cause your transaction to fail instantly. Keep this footprint small!</p>
+                  <p><strong className="text-[#ff0080] block mb-1 uppercase tracking-wider">FOOTPRINT ENTRIES:</strong> Ledger entries the transaction touches: all footprint entries, and the read-write ones among them. These show added contract-storage access that read bytes miss.</p>
                 </div>
               </div>
             </div>
@@ -357,79 +338,30 @@ function Dashboard() {
                 </div>
               </div>
               
-              <div className="p-6 pt-8 relative bg-black/40">
-                <div className="h-[450px] w-full relative z-10">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
-                      <defs>
-                        <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#00ff9d" stopOpacity={0.4}/>
-                          <stop offset="95%" stopColor="#00ff9d" stopOpacity={0}/>
-                        </linearGradient>
-                        <linearGradient id="colorMem" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#ff0080" stopOpacity={0.4}/>
-                          <stop offset="95%" stopColor="#ff0080" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="2 2" stroke="rgba(0,255,157,0.1)" vertical={false} />
-                      <XAxis 
-                        dataKey="commit" 
-                        stroke="#00ff9d" 
-                        tick={{fill: '#00ff9d', fontSize: 10, fontFamily: 'monospace'}} 
-                        tickMargin={12} 
-                        axisLine={{ stroke: '#00ff9d', strokeOpacity: 0.3 }}
-                        tickLine={false}
-                      />
-                      <YAxis 
-                        stroke="#00ff9d" 
-                        tick={{fill: '#00ff9d', fontSize: 10, fontFamily: 'monospace'}} 
-                        tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} 
-                        axisLine={{ stroke: '#00ff9d', strokeOpacity: 0.3 }}
-                        tickLine={false}
-                        tickMargin={12}
-                      />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(3, 3, 3, 0.9)', 
-                          border: '1px solid #00ff9d', 
-                          borderRadius: '0px', 
-                          boxShadow: '0 0 15px rgba(0, 255, 157, 0.3)',
-                          padding: '12px',
-                          fontFamily: 'monospace'
-                        }}
-                        itemStyle={{ color: '#00ff9d', fontWeight: 'bold', padding: '4px 0', fontSize: '12px', textTransform: 'uppercase' }}
-                        labelStyle={{ color: '#ff0080', marginBottom: '8px', fontWeight: 'bold', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px' }}
-                        formatter={(value: any) => Number(value).toLocaleString()}
-                        cursor={{ stroke: 'rgba(0,255,157,0.5)', strokeWidth: 1, strokeDasharray: '4 4' }}
-                      />
-                      <Legend 
-                        wrapperStyle={{ paddingTop: '24px', fontFamily: 'monospace', fontSize: '12px' }} 
-                        iconType="square"
-                      />
-                      <Area 
-                        type="step" 
-                        dataKey="cpu" 
-                        name="CPU_INSTRUCTIONS" 
-                        stroke="#00ff9d" 
-                        strokeWidth={2}
-                        fillOpacity={1}
-                        fill="url(#colorCpu)"
-                        activeDot={{ r: 4, strokeWidth: 0, fill: '#00ff9d', style: { filter: 'drop-shadow(0 0 8px rgba(0,255,157,0.8))' } }} 
-                      />
-                      <Area 
-                        type="step" 
-                        dataKey="memory" 
-                        name="MEMORY_BYTES" 
-                        stroke="#ff0080" 
-                        strokeWidth={2}
-                        fillOpacity={1}
-                        fill="url(#colorMem)"
-                        activeDot={{ r: 4, strokeWidth: 0, fill: '#ff0080', style: { filter: 'drop-shadow(0 0 8px rgba(255,0,128,0.8))' } }} 
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
+              <MetricChart
+                title="CPU instructions"
+                unit="instructions"
+                data={chartData}
+                series={[{ key: 'cpu_instructions', name: 'CPU_INSTRUCTIONS', color: '#00ff9d' }]}
+              />
+              <MetricChart
+                title="Ledger bytes"
+                unit="bytes"
+                data={chartData}
+                series={[
+                  { key: 'read_bytes', name: 'READ_BYTES', color: '#00ff9d' },
+                  { key: 'write_bytes', name: 'WRITE_BYTES', color: '#ff0080', dashed: true },
+                ]}
+              />
+              <MetricChart
+                title="Footprint entries"
+                unit="entries"
+                data={chartData}
+                series={[
+                  { key: 'read_entries', name: 'ALL_ENTRIES', color: '#00ff9d' },
+                  { key: 'write_entries', name: 'READ_WRITE_ENTRIES', color: '#ff0080', dashed: true },
+                ]}
+              />
             </div>
           </div>
         )}
