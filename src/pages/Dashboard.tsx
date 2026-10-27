@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { Activity, CheckCircle2, AlertTriangle, Settings, RefreshCw, Zap, Server, Database, ChevronDown, Terminal, Play, X, Info, BookOpen, Clock } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Activity, CheckCircle2, AlertTriangle, Settings, RefreshCw, Zap, Server, Database, ChevronDown, Info, BookOpen, Clock, FlaskConical } from 'lucide-react';
 import { fetchSnapshotHistory, RateLimitError } from '../api';
-import type { SnapshotHistory, Snapshot } from '../api';
+import type { SnapshotHistory } from '../api';
 import { toChartPoints } from '../metrics';
 import MetricChart from '../components/MetricChart';
 import '../App.css';
@@ -13,18 +13,6 @@ function Dashboard() {
   const [selectedFunction, setSelectedFunction] = useState<string>('all');
   const [dataSourceUrl, setDataSourceUrl] = useState<string>('');
   const [tempUrl, setTempUrl] = useState<string>('');
-
-  // Demo Terminal State
-  const [showDemoTerminal, setShowDemoTerminal] = useState(false);
-  const [demoLogs, setDemoLogs] = useState<string[]>([]);
-  const [demoInProgress, setDemoInProgress] = useState(false);
-  const logsEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [demoLogs]);
 
   useEffect(() => {
     let isMounted = true;
@@ -48,59 +36,6 @@ function Dashboard() {
 
   const handleApplyUrl = () => {
     setDataSourceUrl(tempUrl);
-  };
-
-  const runDemoTest = () => {
-    setShowDemoTerminal(true);
-    setDemoInProgress(true);
-    setDemoLogs([]);
-
-    const sequence = [
-      "> budget-core simulate --fixture \"liquidity_pool_v2\"",
-      "> Initializing Soroban environment [v2.1.0]...",
-      "> Compiling smart contracts to WASM...",
-      "> [OK] target/wasm32-unknown-unknown/release/liquidity_pool.wasm",
-      "> Running execution trace on 145 transactions...",
-      "> Analyzing CPU instructions and Memory footprint...",
-      "> ⚠️ WARNING: Resource utilization spike detected in `swap` function",
-      "> Comparing with baseline commit...",
-      "> CPU usage +25%, Memory usage +15% over baseline",
-      "> Pushing regression snapshot to dashboard state...",
-      "> DONE"
-    ];
-
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < sequence.length) {
-        setDemoLogs(prev => [...prev, sequence[i]]);
-        i++;
-      } else {
-        clearInterval(interval);
-        setDemoInProgress(false);
-
-        // Inject fake snapshot
-        if (history) {
-          const newSnapshot: Snapshot = {
-            schema_version: '1.0',
-            network: 'testnet',
-            commit_sha: 'd3m0b4d' + Math.floor(Math.random()*1000).toString(),
-            generated_at: new Date().toISOString(),
-            functions: (history.snapshots[history.snapshots.length - 1]?.functions || []).map(f => {
-              // Increase cpu and mem
-              return {
-                ...f,
-                cpu_instructions: Math.floor(f.cpu_instructions * 1.25),
-                memory_bytes: f.memory_bytes === null ? null : Math.floor(f.memory_bytes * 1.15)
-              };
-            })
-          };
-          setHistory({
-            ...history,
-            snapshots: [...history.snapshots, newSnapshot]
-          });
-        }
-      }
-    }, 600);
   };
 
   const allFunctions = useMemo(() => {
@@ -133,39 +68,6 @@ function Dashboard() {
   return (
     <div className="min-h-screen p-4 md:p-8 relative z-10 selection:bg-[#00ff9d] selection:text-black">
       
-      {/* Demo Terminal Modal */}
-
-      {showDemoTerminal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="glass-panel w-full max-w-2xl rounded-none border border-[#00ff9d]/50 shadow-[0_0_30px_rgba(0,255,157,0.2)] flex flex-col h-[500px]">
-            <div className="border-b border-[#00ff9d]/30 bg-[#00ff9d]/10 p-3 flex justify-between items-center">
-              <div className="flex items-center gap-2 text-[#00ff9d] font-bold text-sm tracking-widest">
-                <Terminal className="w-4 h-4" />
-                SYSTEM_EXEC::BUDGET_SIMULATION
-              </div>
-              {!demoInProgress && (
-                <button onClick={() => setShowDemoTerminal(false)} className="text-[#00ff9d] hover:text-[#ff0080] transition-colors">
-                  <X className="w-5 h-5" />
-                </button>
-              )}
-            </div>
-            <div className="p-4 flex-1 overflow-y-auto text-[#00ff9d] font-mono text-sm leading-relaxed">
-              {demoLogs.map((log, idx) => (
-                <div key={idx} className={`${log.includes('WARNING') ? 'text-[#ff0080]' : ''} mb-2`}>
-                  {log}
-                </div>
-              ))}
-              {demoInProgress && (
-                <div className="mt-2">
-                  <span className="terminal-cursor"></span>
-                </div>
-              )}
-              <div ref={logsEndRef} />
-            </div>
-          </div>
-        </div>
-      )}
-
       <header className="mb-10 flex flex-col md:flex-row items-start md:items-center justify-between pb-6 gap-6 glass-panel p-6 relative overflow-hidden">
         <div className="flex items-center gap-4 relative z-10">
           <div className="bg-[#00ff9d]/10 p-3 border border-[#00ff9d]/30 shadow-[0_0_15px_rgba(0,255,157,0.3)]">
@@ -188,14 +90,6 @@ function Dashboard() {
             READ DOCS
           </a>
           
-          <button 
-            onClick={runDemoTest}
-            className="glass-button-pink px-4 py-3 flex items-center justify-center gap-2 whitespace-nowrap"
-          >
-            <Play className="w-4 h-4" fill="currentColor" />
-            RUN DEMO BUDGET TEST
-          </button>
-
           <div className="flex overflow-hidden glass-input w-full md:w-64 shadow-inner">
             <input 
               type="text" 
@@ -251,6 +145,18 @@ function Dashboard() {
           </div>
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both">
+            {!dataSourceUrl && (
+              <div role="note" aria-label="Sample data" className="glass-panel p-6 mb-8 border border-[#ff0080] bg-[#ff0080]/5 flex items-start gap-4">
+                <FlaskConical className="w-6 h-6 text-[#ff0080] shrink-0" />
+                <div>
+                  <h2 className="text-sm font-bold text-[#ff0080] tracking-widest uppercase mb-1">Sample data</h2>
+                  <p className="text-xs text-[#00ff9d]/80 leading-relaxed">
+                    These numbers are built-in examples, not measurements of any contract. Enter a data source URL above to load real snapshots.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Info Section */}
             <div className="glass-panel p-6 mb-8 border border-[#00ff9d]/30 bg-black/40 relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-r from-[#00ff9d]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
