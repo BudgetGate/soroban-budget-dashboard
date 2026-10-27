@@ -8,7 +8,8 @@ Last updated: 2026-10-27
 
 - No code work has started in this repo yet. `main` is at `916f2f1` (docs-only PRs #4 and #5 on top of `fc69fae`). Lint and build pass; all 3 tests fail (rechecked 2026-10-27; live title still `temp_vite`).
 - The live site at budgetgate-dashboard.vercel.app still has the title `temp_vite`.
-- Decided 2026-10-26: user docs live only in `BudgetGate/docs`. This repo's `docs/` and `/docs` route are to be removed (D9).
+- D9 done: `docs/`, the `docs:*` scripts, `vitepress`, `vue`, `react-markdown` (only `Docs.tsx` used it), the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md` are gone. READ DOCS links to budgetgate.github.io/docs/dashboard/; the EXTERNAL DOCS button (pointing at the stale Vercel copy) is removed.
+- Found during D9: `docs/` was deployed after all, by a second Vercel project `budgetgate-docs` (D11). Its builds now fail and it keeps serving the stale copy until the maintainer removes it.
 - Core's real measurement has landed, so D7's footprint-entry charts are no longer waiting on core.
 - Next up: open the app in a browser (D3), then fix the tests and CI (D6).
 
@@ -22,7 +23,7 @@ Last updated: 2026-10-27
 - [ ] D1: real package name and `<title>`; regenerate `package-lock.json`
 - [ ] D4: "Sample data" label on the built-in history; remove the demo button that invents snapshots
 - [ ] Redeploy and confirm in a browser that the live title and content changed
-- [ ] D9: remove `docs/`, the `docs:*` scripts, `vitepress` and `vue`, the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md`; matching `BudgetGate/docs` PR for the two dashboard pages that mention them
+- [x] D9: remove `docs/`, the `docs:*` scripts, `vitepress` and `vue`, the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md`; matching `BudgetGate/docs` PR for the two dashboard pages that mention them
 - [ ] D10: `CONTRIBUTING.md` written for this repo (Node, `npm ci`, lint, test, build)
 
 ## Phase 3: Show what core actually measures
@@ -48,5 +49,6 @@ Last updated: 2026-10-27
 - [ ] Vercel: confirm the project redeploys from `main` after merges.
 - [ ] Branch protection on `main`: currently 0 required reviews and no required status checks. Consider requiring `Dashboard CI / build` once it runs tests.
 - [x] Decide between this repo's VitePress `docs/` and the separate `BudgetGate/docs` site: `BudgetGate/docs` (2026-10-26, workspace PR #2).
-- [ ] Vercel: SPA fallback is not configured (`/docs` → 404). Moot once D9 removes the route; needed if client-side routes are added later.
+- [ ] Vercel: remove or disconnect the `budgetgate-docs` project (D11). It serves a stale copy of the old `docs/` at budgetgate-docs.vercel.app, and after D9 its builds fail on every push.
+- [ ] Vercel: SPA fallback is not configured. Moot now that `/docs` is gone; needed if client-side routes are added later.
 - [ ] Delete branches `docs/claude-md-and-roadmap` and `feature/complete-missing-specs`; both are fully in `main` (checked 2026-10-26).
