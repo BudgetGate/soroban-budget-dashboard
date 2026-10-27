@@ -6,8 +6,7 @@ Last updated: 2026-10-27
 
 ## Where I left off
 
-- `main` is at `b6e4134` (after #13). Lint and build pass. The live title is still `temp_vite` (D1).
-- The live site at budgetgate-dashboard.vercel.app still has the title `temp_vite`.
+- `main` is at `e2da1be` (after #14). Lint and build pass.
 - D9 done: `docs/`, the `docs:*` scripts, `vitepress`, `vue`, `react-markdown` (only `Docs.tsx` used it), the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md` are gone. READ DOCS links to budgetgate.github.io/docs/dashboard/; the EXTERNAL DOCS button (pointing at the stale Vercel copy) is removed.
 - Found during D9: `docs/` was deployed after all, by a second Vercel project `budgetgate-docs` (D11). The maintainer deleted that project on 2026-10-27; budgetgate-docs.vercel.app now returns `DEPLOYMENT_NOT_FOUND`, and commits get only the app's `Vercel` status.
 - D6 done: the 6 tests describe the current UI and pass; CI runs lint and tests before the build.
@@ -23,7 +22,8 @@ Last updated: 2026-10-27
   - At 390 px: everything stacks, no sideways scroll, charts readable, but the heading is clipped to "SYS.BUDGETGA" (D14).
   - No console errors or warnings and no failed requests.
   - `npm run dev` was checked the same way during D7 and D8.
-- Next up: D1/D4/D13 (name and title; label sample data; remove the demo and the sync badge), then D14. D2 can be checked against the notes above. D5 needs a maintainer decision.
+- D1, D4 and D13 done in one PR: package `soroban-budget-dashboard`, title "Budget Gate dashboard" (lockfile changed only in its two `name` fields; `npm ci` accepts it); a "Sample data" note whenever the built-in history is shown; the demo button, its scripted terminal and fake snapshots, and the TESTNET_SYNC_ACTIVE badge are gone. Checked in headless Chrome on `npm run dev` at 1280 and 390 px, and with the real counter history (note gone, title kept).
+- Next up: confirm the live site after the Vercel deploy; then D14 (header at 390 px). D5 needs a maintainer decision.
 
 ## Phase 1: See what exists, make CI honest
 
@@ -33,10 +33,10 @@ Last updated: 2026-10-27
 
 ## Phase 2: Identity and honesty
 
-- [ ] D1: real package name and `<title>`; regenerate `package-lock.json`
-- [ ] D13: remove the TESTNET_SYNC_ACTIVE badge
+- [x] D1: real package name and `<title>`; regenerate `package-lock.json`
+- [x] D13: remove the TESTNET_SYNC_ACTIVE badge
 - [ ] D14: header heading fits at 390 px
-- [ ] D4: "Sample data" label on the built-in history; remove the demo button that invents snapshots
+- [x] D4: "Sample data" label on the built-in history; remove the demo button that invents snapshots
 - [ ] Redeploy and confirm in a browser that the live title and content changed
 - [x] D9: remove `docs/`, the `docs:*` scripts, `vitepress` and `vue`, the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md`; matching `BudgetGate/docs` PR for the two dashboard pages that mention them
 - [x] D10: `CONTRIBUTING.md` written for this repo (Node, `npm ci`, lint, test, build)

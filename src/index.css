@@ -54,41 +54,9 @@
     transform: translateY(-2px);
   }
 
-  .glass-button-pink {
-    background: rgba(255, 0, 128, 0.1);
-    border: 1px solid #ff0080;
-    color: #ff0080;
-    text-transform: uppercase;
-    font-weight: bold;
-    letter-spacing: 1px;
-    box-shadow: 0 0 10px rgba(255, 0, 128, 0.2);
-    transition: all 0.2s ease;
-  }
-  
-  .glass-button-pink:hover {
-    background: rgba(255, 0, 128, 0.2);
-    box-shadow: 0 0 20px rgba(255, 0, 128, 0.5);
-    transform: translateY(-2px);
-  }
-
   .text-gradient {
     color: #00ff9d;
     text-shadow: 0 0 10px rgba(0, 255, 157, 0.8);
-  }
-
-  .terminal-cursor {
-    display: inline-block;
-    width: 10px;
-    height: 1.2em;
-    background-color: #00ff9d;
-    animation: blink 1s step-end infinite;
-    vertical-align: middle;
-    margin-left: 5px;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
   }
 
   /* Scanline effect */

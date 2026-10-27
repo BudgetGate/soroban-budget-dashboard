@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from './App';
@@ -107,6 +107,32 @@ describe('Dashboard App UI Component', () => {
     expect(screen.getByRole('option', { name: /burn/ })).toBeInTheDocument();
 
     expect(screen.getByText('Active')).toBeInTheDocument();
+  });
+
+  it('labels the built-in history as sample data, with no demo button or sync badge', async () => {
+    fetchHistory.mockResolvedValue({ snapshots: [snapshot('abc1234', [fn('mint', 100)])] });
+
+    render(<App />);
+
+    const note = await screen.findByRole('note', { name: 'Sample data' });
+    expect(note).toHaveTextContent('not measurements of any contract');
+    expect(fetchHistory).toHaveBeenCalledWith('');
+    expect(screen.queryByText(/RUN DEMO BUDGET TEST/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/TESTNET_SYNC_ACTIVE/)).not.toBeInTheDocument();
+  });
+
+  it('drops the sample data label once a data source URL is applied', async () => {
+    fetchHistory.mockResolvedValue({ snapshots: [snapshot('abc1234', [fn('mint', 100)])] });
+
+    render(<App />);
+    await screen.findByRole('note', { name: 'Sample data' });
+
+    fireEvent.change(screen.getByPlaceholderText('DATASOURCE_URL'), { target: { value: 'https://example.test/history.json' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh Data' }));
+
+    await screen.findByText('RESOURCE_TELEMETRY');
+    expect(fetchHistory).toHaveBeenLastCalledWith('https://example.test/history.json');
+    expect(screen.queryByRole('note', { name: 'Sample data' })).not.toBeInTheDocument();
   });
 
   it('charts CPU, ledger bytes and footprint entries, and says when entries were not reported', async () => {
