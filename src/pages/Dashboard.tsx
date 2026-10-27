@@ -69,12 +69,12 @@ function Dashboard() {
     <div className="min-h-screen p-4 md:p-8 relative z-10 selection:bg-[#00ff9d] selection:text-black">
       
       <header className="mb-10 flex flex-col md:flex-row items-start md:items-center justify-between pb-6 gap-6 glass-panel p-6 relative overflow-hidden">
-        <div className="flex items-center gap-4 relative z-10">
-          <div className="bg-[#00ff9d]/10 p-3 border border-[#00ff9d]/30 shadow-[0_0_15px_rgba(0,255,157,0.3)]">
+        <div className="flex items-center gap-4 relative z-10 min-w-0 max-w-full md:shrink-0">
+          <div className="shrink-0 bg-[#00ff9d]/10 p-3 border border-[#00ff9d]/30 shadow-[0_0_15px_rgba(0,255,157,0.3)]">
             <Activity className="w-8 h-8 text-[#00ff9d]" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-widest text-[#00ff9d] uppercase" style={{ textShadow: '0 0 10px rgba(0,255,157,0.5)' }}>SYS.BudgetGate</h1>
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-wider sm:tracking-widest break-words text-[#00ff9d] uppercase" style={{ textShadow: '0 0 10px rgba(0,255,157,0.5)' }}>SYS.BudgetGate</h1>
             <p className="text-xs text-[#00ff9d]/70 font-mono tracking-widest uppercase mt-1">Soroban Resource Monitor_v2.0</p>
           </div>
         </div>
