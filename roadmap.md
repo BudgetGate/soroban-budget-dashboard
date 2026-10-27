@@ -6,14 +6,15 @@ Last updated: 2026-10-27
 
 ## Where I left off
 
-- `main` is at `72873c0` (after #9). Lint and build pass. The live title is still `temp_vite` (D1).
+- `main` is at `b5eb912` (after #10). Lint and build pass. The live title is still `temp_vite` (D1).
 - The live site at budgetgate-dashboard.vercel.app still has the title `temp_vite`.
 - D9 done: `docs/`, the `docs:*` scripts, `vitepress`, `vue`, `react-markdown` (only `Docs.tsx` used it), the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md` are gone. READ DOCS links to budgetgate.github.io/docs/dashboard/; the EXTERNAL DOCS button (pointing at the stale Vercel copy) is removed.
 - Found during D9: `docs/` was deployed after all, by a second Vercel project `budgetgate-docs` (D11). The maintainer deleted that project on 2026-10-27; budgetgate-docs.vercel.app now returns `DEPLOYMENT_NOT_FOUND`, and commits get only the app's `Vercel` status.
 - Core's real measurement has landed, so D7's footprint-entry charts are no longer waiting on core.
 - D6 done: the 6 tests describe the current UI and pass; CI runs lint and tests before the build.
 - D12 done: CI runs on Node 24 with `actions/checkout@v7` and `setup-node@v7`, so it no longer warns about Node 20.
-- Next up: D10 (`CONTRIBUTING.md`). D3 needs a browser.
+- D10 done: `CONTRIBUTING.md` describes this repo (Node 24, `npm ci`, lint, test, build, the section 6 rules, PR checklist) instead of core's Go guide.
+- Next up: D7/D8 (charts for core's metrics, `schema_version` check). D3 needs a browser.
 
 ## Phase 1: See what exists, make CI honest
 
@@ -27,7 +28,7 @@ Last updated: 2026-10-27
 - [ ] D4: "Sample data" label on the built-in history; remove the demo button that invents snapshots
 - [ ] Redeploy and confirm in a browser that the live title and content changed
 - [x] D9: remove `docs/`, the `docs:*` scripts, `vitepress` and `vue`, the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md`; matching `BudgetGate/docs` PR for the two dashboard pages that mention them
-- [ ] D10: `CONTRIBUTING.md` written for this repo (Node, `npm ci`, lint, test, build)
+- [x] D10: `CONTRIBUTING.md` written for this repo (Node, `npm ci`, lint, test, build)
 
 ## Phase 3: Show what core actually measures
 

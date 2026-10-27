@@ -30,7 +30,7 @@ State of `main` (`4fdd186`) on 2026-10-26. `package.json` name is still `temp_vi
 | Lint | Oxlint, config in `.oxlintrc.json`. Passes. |
 | `.github/workflows/ci.yml` | `Dashboard CI`, job `build`: `npm ci`, `npm run lint`, `npm test`, `npm run build`. Node 24, `actions/checkout@v7`, `setup-node@v7` (both `node24`). Runs on push/PR to `main` only. |
 | Config | `vite.config.ts`, `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json`. `dist/` is gitignored. |
-| Other | `PR_BODY.md` (stale PR description for the Octokit change), `CONTRIBUTING.md` (core's copy: Go 1.21+, `go test`, nothing about this repo; D10), `SECURITY.md` (reporting address `security@budgetgate.io`, not checked to be deliverable; states the project is unaudited). |
+| Other | `PR_BODY.md` (stale PR description for the Octokit change), `CONTRIBUTING.md` (Node 24 setup, `npm ci`/lint/test/build, the rules in section 6, PR checklist), `SECURITY.md` (reporting address `security@budgetgate.io`, not checked to be deliverable; states the project is unaudited). |
 
 Scripts: `dev`, `build` (`tsc -b && vite build`), `lint` (`oxlint`), `preview`, `test` (`vitest run`).
 
@@ -47,16 +47,14 @@ Checked 2026-10-26 against `origin/main` (`4fdd186`).
 | D5 | Open design question: how data gets in. Unauthenticated GitHub REST calls from a browser are rate-limited, a token must never be bundled, and nothing in the pipeline produces the `history.json` the app expects (core writes one snapshot; the Action puts it in the Actions cache). Do not pick silently. | `src/api.ts`, design |
 | D7 | Only CPU and memory are charted; read bytes, write bytes and footprint entries are never shown. Core records `memory_bytes: null` and no longer compares memory; the aggregate view sums `null` as 0. | `src/pages/Dashboard.tsx`, core `SCHEMA.md` |
 | D8 | No `schema_version` validation on load, no handling of 403/429 rate limits. | `src/api.ts` |
-| D10 | `CONTRIBUTING.md` is core's copy: Go 1.21+, `go mod download`, `go test`. Nothing about Node, `npm ci`, lint or tests in this repo. | `CONTRIBUTING.md` (identical to core's) |
 
 ## 4. Work order for this repo
 
 1. D3: open the live app and `npm run dev` in a browser; record what you see.
 2. D1, D4: real package name and title (regenerate `package-lock.json` after renaming); label sample data as "Sample data" in the UI, remove the fake demo snapshots.
-3. D10: a CONTRIBUTING guide for this repo. Not blocked; can be done anytime.
-4. D7, D8: chart CPU, read bytes, write bytes and footprint entries; validate `schema_version`; handle `null` metrics.
-5. D5: decide the data source with the maintainer. Then wire GitHub reading, pagination and caching, and visible 403/429 handling.
-6. D2: README matches the app. Then per-function drill-down and trend alerting once real data flows.
+3. D7, D8: chart CPU, read bytes, write bytes and footprint entries; validate `schema_version`; handle `null` metrics.
+4. D5: decide the data source with the maintainer. Then wire GitHub reading, pagination and caching, and visible 403/429 handling.
+5. D2: README matches the app. Then per-function drill-down and trend alerting once real data flows.
 
 `roadmap.md` tracks progress against this list.
 
