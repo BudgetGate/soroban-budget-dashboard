@@ -6,19 +6,20 @@ Last updated: 2026-10-27
 
 ## Where I left off
 
-- `main` is at `410ec7f` (after #8). Lint and build pass. The live title is still `temp_vite` (D1).
+- `main` is at `72873c0` (after #9). Lint and build pass. The live title is still `temp_vite` (D1).
 - The live site at budgetgate-dashboard.vercel.app still has the title `temp_vite`.
 - D9 done: `docs/`, the `docs:*` scripts, `vitepress`, `vue`, `react-markdown` (only `Docs.tsx` used it), the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md` are gone. READ DOCS links to budgetgate.github.io/docs/dashboard/; the EXTERNAL DOCS button (pointing at the stale Vercel copy) is removed.
 - Found during D9: `docs/` was deployed after all, by a second Vercel project `budgetgate-docs` (D11). The maintainer deleted that project on 2026-10-27; budgetgate-docs.vercel.app now returns `DEPLOYMENT_NOT_FOUND`, and commits get only the app's `Vercel` status.
 - Core's real measurement has landed, so D7's footprint-entry charts are no longer waiting on core.
 - D6 done: the 6 tests describe the current UI and pass; CI runs lint and tests before the build.
-- Next up: D12 (CI action pins and Node 24), D10 (`CONTRIBUTING.md`). D3 needs a browser.
+- D12 done: CI runs on Node 24 with `actions/checkout@v7` and `setup-node@v7`, so it no longer warns about Node 20.
+- Next up: D10 (`CONTRIBUTING.md`). D3 needs a browser.
 
 ## Phase 1: See what exists, make CI honest
 
 - [ ] D3: open the live app and `npm run dev` in a browser; write down what renders
 - [x] D6: tests that match the current UI; CI runs `npm run lint` and `npm test` as well as `build`
-- [ ] D12: CI on `actions/checkout@v7`, `setup-node@v7` and Node 24
+- [x] D12: CI on `actions/checkout@v7`, `setup-node@v7` and Node 24
 
 ## Phase 2: Identity and honesty
 
