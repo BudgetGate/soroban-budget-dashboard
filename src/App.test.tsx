@@ -1,24 +1,49 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from './App';
 import * as api from './api';
+import type { Snapshot, SnapshotFunction, SnapshotHistory } from './api';
 
 // Mock the API fetch module
 vi.mock('./api', async () => {
-  const actual = await vi.importActual('./api');
+  const actual = await vi.importActual<typeof import('./api')>('./api');
   return {
-    ...actual as any,
+    ...actual,
     fetchSnapshotHistory: vi.fn(),
   };
 });
 
-// Mock ResizeObserver for Recharts
+// Recharts' ResponsiveContainer needs ResizeObserver, which jsdom does not provide.
 globalThis.ResizeObserver = class {
   observe() {}
   unobserve() {}
   disconnect() {}
-} as any;
+} as unknown as typeof ResizeObserver;
+
+const fetchHistory = vi.mocked(api.fetchSnapshotHistory);
+
+function fn(name: string, cpu: number): SnapshotFunction {
+  return {
+    name,
+    fixture_id: `${name}_fixture`,
+    cpu_instructions: cpu,
+    memory_bytes: 0,
+    read_bytes: 0,
+    write_bytes: 0,
+    pct_of_network_cap: 0,
+  };
+}
+
+function snapshot(commit: string, functions: SnapshotFunction[]): Snapshot {
+  return {
+    schema_version: '1.0',
+    network: 'testnet',
+    generated_at: '2026-08-01T12:00:00Z',
+    commit_sha: commit,
+    functions,
+  };
+}
 
 describe('Dashboard App UI Component', () => {
   beforeEach(() => {
@@ -26,59 +51,66 @@ describe('Dashboard App UI Component', () => {
   });
 
   it('shows loading state initially', () => {
-    // Return an unresolved promise to keep it in loading state
-    (api.fetchSnapshotHistory as any).mockReturnValue(new Promise(() => {}));
+    // An unresolved promise keeps the page in its loading state.
+    fetchHistory.mockReturnValue(new Promise(() => {}));
     render(<App />);
-    expect(screen.getByText(/Fetching telemetry data/i)).toBeInTheDocument();
+    expect(screen.getByText(/Establishing connection/i)).toBeInTheDocument();
   });
 
   it('displays an error message when data fetching fails', async () => {
     const errorMsg = 'Failed to fetch history: Not Found';
-    (api.fetchSnapshotHistory as any).mockRejectedValue(new Error(errorMsg));
-    
+    fetchHistory.mockRejectedValue(new Error(errorMsg));
+
     render(<App />);
-    
-    await waitFor(() => {
-      expect(screen.getByText(/Error Fetching Data/i)).toBeInTheDocument();
-      expect(screen.getByText(errorMsg)).toBeInTheDocument();
-    });
+
+    expect(await screen.findByText('CRITICAL SYSTEM ERROR')).toBeInTheDocument();
+    expect(screen.getByText(errorMsg)).toBeInTheDocument();
   });
 
-  it('renders correctly and handles the drill-down view correctly', async () => {
-    const mockHistory = {
-      snapshots: [
-        {
-          schema_version: '1.0',
-          network: 'testnet',
-          generated_at: '2026-08-01T12:00:00Z',
-          commit_sha: 'abc1234',
-          functions: [
-            { name: 'mint', cpu_instructions: 100, memory_bytes: 50 },
-            { name: 'burn', cpu_instructions: 200, memory_bytes: 100 },
-          ]
-        }
-      ]
-    };
-    (api.fetchSnapshotHistory as any).mockResolvedValue(mockHistory);
-    
-    render(<App />);
-    
-    // Wait for the Dashboard to load and verify the main title
-    await waitFor(() => {
-      expect(screen.getByText(/Resource Consumption/)).toBeInTheDocument();
-      expect(screen.getByText('Regression Status')).toBeInTheDocument();
-    });
+  it('shows the empty state when the history has no snapshots', async () => {
+    fetchHistory.mockResolvedValue({ snapshots: [] });
 
-    // Verify the function select dropdown exists
-    const selectElem = screen.getByLabelText(/Filter:/i);
-    expect(selectElem).toBeInTheDocument();
-    
-    // Verify that the dropdown has the correct options from the mock data
-    expect(screen.getByText('All Functions (Aggregate)')).toBeInTheDocument();
-    expect(screen.getByText('mint')).toBeInTheDocument();
-    expect(screen.getByText('burn')).toBeInTheDocument();
-    
-    // Also verify Active functions tracked is shown
-    expect(screen.getByText(/Active/i)).toBeInTheDocument();
+    render(<App />);
+
+    expect(await screen.findByText('NO_DATA_STREAM')).toBeInTheDocument();
+  });
+
+  it('renders the loaded history and its function filter', async () => {
+    const history: SnapshotHistory = {
+      snapshots: [snapshot('abc1234', [fn('mint', 100), fn('burn', 200)])],
+    };
+    fetchHistory.mockResolvedValue(history);
+
+    render(<App />);
+
+    expect(await screen.findByText('RESOURCE_TELEMETRY')).toBeInTheDocument();
+    expect(screen.getByText('SYS.REGRESSION_STATE')).toBeInTheDocument();
+    expect(screen.getByText('Clear')).toBeInTheDocument();
+    expect(screen.getByText('abc1234')).toBeInTheDocument();
+
+    const select = screen.getByLabelText(/FILTER_VECTOR/i);
+    expect(select).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /ALL_VECTORS \(AGGREGATE\)/ })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /mint/ })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /burn/ })).toBeInTheDocument();
+
+    expect(screen.getByText('Active')).toBeInTheDocument();
+  });
+
+  it.each([
+    { name: 'flags a CPU increase above 10% between the last two snapshots', cpu: 111, status: 'Regression Detected' },
+    { name: 'stays clear for a CPU increase of 10% or less', cpu: 110, status: 'Clear' },
+  ])('$name', async ({ cpu, status }) => {
+    const history: SnapshotHistory = {
+      snapshots: [
+        snapshot('aaaaaaa', [fn('mint', 100)]),
+        snapshot('bbbbbbb', [fn('mint', cpu)]),
+      ],
+    };
+    fetchHistory.mockResolvedValue(history);
+
+    render(<App />);
+
+    expect(await screen.findByText(status)).toBeInTheDocument();
   });
 });
