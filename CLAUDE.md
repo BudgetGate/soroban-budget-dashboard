@@ -48,7 +48,6 @@ Checked 2026-10-26 against `origin/main` (`4fdd186`).
 | D6 | All 3 Vitest tests fail: they look for text that no longer exists ("Fetching telemetry data", "Error Fetching Data", "Resource Consumption"). CI runs only `npm run build`, so it stays green. | `npm test`, `.github/workflows/ci.yml` |
 | D7 | Only CPU and memory are charted; read bytes, write bytes and footprint entries are never shown. Core records `memory_bytes: null` and no longer compares memory; the aggregate view sums `null` as 0. | `src/pages/Dashboard.tsx`, core `SCHEMA.md` |
 | D8 | No `schema_version` validation on load, no handling of 403/429 rate limits. | `src/api.ts` |
-| D11 | A second Vercel project, `budgetgate-docs`, builds this repo on every push and served `docs/` at budgetgate-docs.vercel.app (a stale copy: `@v1`, hand-made `new.json`, `checkout@v4`). With `docs/` and `vitepress` gone (D9), its builds fail, its status on every commit turns red, and Vercel keeps serving the last good build. Removing or disconnecting the project is a Vercel setting: maintainer action. | Commit statuses `Vercel – budgetgate-docs`; deployments `Production – budgetgate-docs`; `curl budgetgate-docs.vercel.app/guide/getting-started.html` matches `docs/guide/getting-started.md` (2026-10-27) |
 | D10 | `CONTRIBUTING.md` is core's copy: Go 1.21+, `go mod download`, `go test`. Nothing about Node, `npm ci`, lint or tests in this repo. | `CONTRIBUTING.md` (identical to core's) |
 
 ## 4. Work order for this repo
@@ -56,7 +55,7 @@ Checked 2026-10-26 against `origin/main` (`4fdd186`).
 1. D3: open the live app and `npm run dev` in a browser; record what you see.
 2. D6: make the tests describe the current UI; add `npm run lint` and `npm test` to CI.
 3. D1, D4: real package name and title (regenerate `package-lock.json` after renaming); label sample data as "Sample data" in the UI, remove the fake demo snapshots.
-4. D10: a CONTRIBUTING guide for this repo. Not blocked; can be done anytime. D11 needs the maintainer (Vercel).
+4. D10: a CONTRIBUTING guide for this repo. Not blocked; can be done anytime.
 5. D7, D8: chart CPU, read bytes, write bytes and footprint entries; validate `schema_version`; handle `null` metrics.
 6. D5: decide the data source with the maintainer. Then wire GitHub reading, pagination and caching, and visible 403/429 handling.
 7. D2: README matches the app. Then per-function drill-down and trend alerting once real data flows.
