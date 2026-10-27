@@ -32,7 +32,7 @@ State of `main` (`4fdd186`) on 2026-10-26. `package.json` name `soroban-budget-d
 | Lint | Oxlint, config in `.oxlintrc.json`. Passes. |
 | `.github/workflows/ci.yml` | `Dashboard CI`, job `build`: `npm ci`, `npm run lint`, `npm test`, `npm run build`. Node 24, `actions/checkout@v7`, `setup-node@v7` (both `node24`). Runs on push/PR to `main` only. |
 | Config | `vite.config.ts`, `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json`. `dist/` is gitignored. |
-| Other | `PR_BODY.md` (stale PR description for the Octokit change), `CONTRIBUTING.md` (Node 24 setup, `npm ci`/lint/test/build, the rules in section 6, PR checklist), `SECURITY.md` (reporting address `security@budgetgate.io`, not checked to be deliverable; states the project is unaudited). |
+| Other | `CONTRIBUTING.md` (Node 24 setup, `npm ci`/lint/test/build, the rules in section 6, PR checklist), `SECURITY.md` (reporting address `security@budgetgate.io`, not checked to be deliverable; states the project is unaudited). |
 
 Scripts: `dev`, `build` (`tsc -b && vite build`), `lint` (`oxlint`), `preview`, `test` (`vitest run`).
 
