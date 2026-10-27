@@ -6,10 +6,10 @@ Last updated: 2026-10-27
 
 ## Where I left off
 
-- No code work has started in this repo yet. `main` is at `916f2f1` (docs-only PRs #4 and #5 on top of `fc69fae`). Lint and build pass; all 3 tests fail (rechecked 2026-10-27; live title still `temp_vite`).
+- `main` is at `15a3e02` (after #7, D9). Lint and build pass; all 3 tests still fail (D6). The live title is still `temp_vite` (D1).
 - The live site at budgetgate-dashboard.vercel.app still has the title `temp_vite`.
 - D9 done: `docs/`, the `docs:*` scripts, `vitepress`, `vue`, `react-markdown` (only `Docs.tsx` used it), the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md` are gone. READ DOCS links to budgetgate.github.io/docs/dashboard/; the EXTERNAL DOCS button (pointing at the stale Vercel copy) is removed.
-- Found during D9: `docs/` was deployed after all, by a second Vercel project `budgetgate-docs` (D11). Its builds now fail and it keeps serving the stale copy until the maintainer removes it.
+- Found during D9: `docs/` was deployed after all, by a second Vercel project `budgetgate-docs` (D11). The maintainer deleted that project on 2026-10-27; budgetgate-docs.vercel.app now returns `DEPLOYMENT_NOT_FOUND`, and commits get only the app's `Vercel` status.
 - Core's real measurement has landed, so D7's footprint-entry charts are no longer waiting on core.
 - Next up: open the app in a browser (D3), then fix the tests and CI (D6).
 
@@ -49,6 +49,6 @@ Last updated: 2026-10-27
 - [ ] Vercel: confirm the project redeploys from `main` after merges.
 - [ ] Branch protection on `main`: currently 0 required reviews and no required status checks. Consider requiring `Dashboard CI / build` once it runs tests.
 - [x] Decide between this repo's VitePress `docs/` and the separate `BudgetGate/docs` site: `BudgetGate/docs` (2026-10-26, workspace PR #2).
-- [ ] Vercel: remove or disconnect the `budgetgate-docs` project (D11). It serves a stale copy of the old `docs/` at budgetgate-docs.vercel.app, and after D9 its builds fail on every push.
+- [x] Vercel: remove or disconnect the `budgetgate-docs` project (D11). Deleted by the maintainer on 2026-10-27; it had served a stale copy of the old `docs/` at budgetgate-docs.vercel.app (now `DEPLOYMENT_NOT_FOUND`).
 - [ ] Vercel: SPA fallback is not configured. Moot now that `/docs` is gone; needed if client-side routes are added later.
 - [ ] Delete branches `docs/claude-md-and-roadmap` and `feature/complete-missing-specs`; both are fully in `main` (checked 2026-10-26).
