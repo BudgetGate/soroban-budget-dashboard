@@ -97,6 +97,19 @@ describe('Dashboard App UI Component', () => {
     expect(screen.getByText('Active')).toBeInTheDocument();
   });
 
+  it('charts CPU, ledger bytes and footprint entries, and says when entries were not reported', async () => {
+    // fn() builds schema 1.0 functions, which have no entry counts.
+    fetchHistory.mockResolvedValue({ snapshots: [snapshot('abc1234', [fn('mint', 100)])] });
+
+    render(<App />);
+
+    expect(await screen.findByRole('region', { name: 'CPU instructions' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Ledger bytes' })).toBeInTheDocument();
+    const entries = screen.getByRole('region', { name: 'Footprint entries' });
+    expect(entries).toHaveTextContent('Not reported in these snapshots.');
+    expect(screen.queryByText(/MEMORY_BYTES/)).not.toBeInTheDocument();
+  });
+
   it.each([
     { name: 'flags a CPU increase above 10% between the last two snapshots', cpu: 111, status: 'Regression Detected' },
     { name: 'stays clear for a CPU increase of 10% or less', cpu: 110, status: 'Clear' },
