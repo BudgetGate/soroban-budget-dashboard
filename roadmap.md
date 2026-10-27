@@ -2,11 +2,11 @@
 
 Progress tracker for this repo. The defect IDs (D1, D2, …) and their evidence are in `CLAUDE.md` section 3; the order comes from `CLAUDE.md` section 4. Tick a box only when the change is merged to `main` and, for UI changes, checked in a browser.
 
-Last updated: 2026-10-26
+Last updated: 2026-10-27
 
 ## Where I left off
 
-- No code work has started in this repo yet. `main` is at `4fdd186` (docs-only PR #4 on top of `fc69fae`). Lint and build pass; all 3 tests fail (rechecked 2026-10-26).
+- No code work has started in this repo yet. `main` is at `916f2f1` (docs-only PRs #4 and #5 on top of `fc69fae`). Lint and build pass; all 3 tests fail (rechecked 2026-10-27; live title still `temp_vite`).
 - The live site at budgetgate-dashboard.vercel.app still has the title `temp_vite`.
 - Decided 2026-10-26: user docs live only in `BudgetGate/docs`. This repo's `docs/` and `/docs` route are to be removed (D9).
 - Core's real measurement has landed, so D7's footprint-entry charts are no longer waiting on core.
