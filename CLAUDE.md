@@ -42,12 +42,10 @@ Checked 2026-10-26 against `origin/main` (`4fdd186`).
 
 | ID | Defect | Evidence |
 |----|--------|----------|
-| D5 | Open design question: how data gets in. Unauthenticated GitHub REST calls from a browser are rate-limited, a token must never be bundled, and nothing in the pipeline produces the `history.json` the app expects (core writes one snapshot; the Action puts it in the Actions cache). Do not pick silently. | `src/api.ts`, design |
 
 ## 4. Work order for this repo
 
-1. D5: decide the data source with the maintainer. Then wire GitHub reading, pagination and caching.
-2. Per-function drill-down and trend alerting once real data flows.
+1. Per-function drill-down and trend alerting once real data flows.
 
 `roadmap.md` tracks progress against this list.
 
