@@ -32,7 +32,7 @@ Budget Gate is not audited and not production-ready.
 
 ## Limitations
 
-- History needs the GitHub Action's `history-branch` input (in the Action's `main`, not in a release yet). Private repositories cannot be read: the dashboard has no token.
+- History needs the GitHub Action's `history-branch` input (in the Action since `v0.2.0`). Private repositories cannot be read: the dashboard has no token.
 - Results are not cached, and entering the same URL again does not reload it.
 
 ## Development
