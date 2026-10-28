@@ -32,7 +32,7 @@ State of `main` (`4fdd186`) on 2026-10-26. `package.json` name `soroban-budget-d
 | Lint | Oxlint, config in `.oxlintrc.json`. Passes. |
 | `.github/workflows/ci.yml` | `Dashboard CI`, job `build`: `npm ci`, `npm run lint`, `npm test`, `npm run build`. Node 24, `actions/checkout@v7`, `setup-node@v7` (both `node24`). Runs on push/PR to `main` only. |
 | Config | `vite.config.ts`, `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json`. `dist/` is gitignored. |
-| Other | `CONTRIBUTING.md` (Node 24 setup, `npm ci`/lint/test/build, the rules in section 6, PR checklist), `SECURITY.md` (reporting address `security@budgetgate.io`, not checked to be deliverable; states the project is unaudited). |
+| Other | `CONTRIBUTING.md` (Node 24 setup, `npm ci`/lint/test/build, the rules in section 6, PR checklist), `SECURITY.md` (reports through GitHub private vulnerability reporting, which the maintainer must enable in the repo settings; states the project is unaudited and not production-ready). |
 
 Scripts: `dev`, `build` (`tsc -b && vite build`), `lint` (`oxlint`), `preview`, `test` (`vitest run`).
 
@@ -43,7 +43,7 @@ Checked 2026-10-28 against `origin/main` (`51f139f`).
 | ID | Defect | Evidence |
 |----|--------|----------|
 
-Resolved and removed, latest first: D15 (found 2026-10-28 in a browser check of the live site, fixed in #20): typing a data-source URL key by key crashed the whole page after about 30 characters with React error #185 (maximum update depth), in production builds only; pasting did not. Each keystroke re-rendered all three Recharts charts with new `series` arrays. `MetricChart` is now `memo`ized and the series are module constants, so typing no longer re-renders the charts; `App.test.tsx` counts chart renders while typing (140 without the fix, 2 with it). The exact mechanism inside Recharts 3.10 was not pinned down: switching the function filter 60 times, which re-renders the charts with new data, never crashed.
+Resolved and removed, latest first: D16 (found 2026-10-28): `SECURITY.md` sent reports to `security@budgetgate.io`, but `budgetgate.io` does not exist (NXDOMAIN on Google DNS), so reports could not arrive and whoever registered the domain would receive them. It now points to GitHub private vulnerability reporting (maintainer's decision); that was off on 2026-10-28 and has to be enabled in the repo settings. D15 (found 2026-10-28 in a browser check of the live site, fixed in #20): typing a data-source URL key by key crashed the whole page after about 30 characters with React error #185 (maximum update depth), in production builds only; pasting did not. Each keystroke re-rendered all three Recharts charts with new `series` arrays. `MetricChart` is now `memo`ized and the series are module constants, so typing no longer re-renders the charts; `App.test.tsx` counts chart renders while typing (140 without the fix, 2 with it). The exact mechanism inside Recharts 3.10 was not pinned down: switching the function filter 60 times, which re-renders the charts with new data, never crashed.
 
 ## 4. Work order for this repo
 

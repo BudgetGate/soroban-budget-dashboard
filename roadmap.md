@@ -62,6 +62,7 @@ Last updated: 2026-10-28
 ## Phase 5: Polish
 
 - [x] D2: README matches the app
+- [x] D16: `SECURITY.md` points to GitHub private vulnerability reporting instead of `security@budgetgate.io`, whose domain does not exist (found 2026-10-28)
 - [ ] Per-function drill-down
 - [ ] Trend alerting across several commits (functions trending toward a cap)
 
@@ -71,5 +72,6 @@ Last updated: 2026-10-28
 - [ ] Branch protection on `main`: currently 0 required reviews and no required status checks. Consider requiring `Dashboard CI / build` once it runs tests.
 - [x] Decide between this repo's VitePress `docs/` and the separate `BudgetGate/docs` site: `BudgetGate/docs` (2026-10-26, workspace PR #2).
 - [x] Vercel: remove or disconnect the `budgetgate-docs` project (D11). Deleted by the maintainer on 2026-10-27; it had served a stale copy of the old `docs/` at budgetgate-docs.vercel.app (now `DEPLOYMENT_NOT_FOUND`).
+- [ ] Enable private vulnerability reporting (Settings → Security). `SECURITY.md` points to it (D16); off on 2026-10-28.
 - [ ] Vercel: SPA fallback is not configured. Moot now that `/docs` is gone; needed if client-side routes are added later.
 - [ ] Delete branches `docs/claude-md-and-roadmap` and `feature/complete-missing-specs`; both are fully in `main` (checked 2026-10-26).
