@@ -4,7 +4,19 @@ import { fetchSnapshotHistory, RateLimitError } from '../api';
 import type { SnapshotHistory } from '../api';
 import { toChartPoints } from '../metrics';
 import MetricChart from '../components/MetricChart';
+import type { MetricSeries } from '../components/MetricChart';
 import '../App.css';
+
+// Defined once so the charts' props stay identical between renders (see MetricChart).
+const CPU_SERIES: MetricSeries[] = [{ key: 'cpu_instructions', name: 'CPU_INSTRUCTIONS', color: '#00ff9d' }];
+const BYTES_SERIES: MetricSeries[] = [
+  { key: 'read_bytes', name: 'READ_BYTES', color: '#00ff9d' },
+  { key: 'write_bytes', name: 'WRITE_BYTES', color: '#ff0080', dashed: true },
+];
+const ENTRIES_SERIES: MetricSeries[] = [
+  { key: 'read_entries', name: 'ALL_ENTRIES', color: '#00ff9d' },
+  { key: 'write_entries', name: 'READ_WRITE_ENTRIES', color: '#ff0080', dashed: true },
+];
 
 function Dashboard() {
   const [history, setHistory] = useState<SnapshotHistory | null>(null);
@@ -250,25 +262,19 @@ function Dashboard() {
                 title="CPU instructions"
                 unit="instructions"
                 data={chartData}
-                series={[{ key: 'cpu_instructions', name: 'CPU_INSTRUCTIONS', color: '#00ff9d' }]}
+                series={CPU_SERIES}
               />
               <MetricChart
                 title="Ledger bytes"
                 unit="bytes"
                 data={chartData}
-                series={[
-                  { key: 'read_bytes', name: 'READ_BYTES', color: '#00ff9d' },
-                  { key: 'write_bytes', name: 'WRITE_BYTES', color: '#ff0080', dashed: true },
-                ]}
+                series={BYTES_SERIES}
               />
               <MetricChart
                 title="Footprint entries"
                 unit="entries"
                 data={chartData}
-                series={[
-                  { key: 'read_entries', name: 'ALL_ENTRIES', color: '#00ff9d' },
-                  { key: 'write_entries', name: 'READ_WRITE_ENTRIES', color: '#ff0080', dashed: true },
-                ]}
+                series={ENTRIES_SERIES}
               />
             </div>
           </div>

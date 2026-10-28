@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -12,6 +13,19 @@ vi.mock('./api', async () => {
     ...actual,
     fetchSnapshotHistory: vi.fn(),
   };
+});
+
+// Counts chart renders, to check that typing in the data source box leaves the charts alone.
+// ResponsiveContainer is counted because jsdom has no layout: it measures 0x0 and never renders
+// the LineChart inside it.
+const chartRenders = vi.hoisted(() => ({ count: 0 }));
+vi.mock('recharts', async () => {
+  const actual = await vi.importActual<typeof import('recharts')>('recharts');
+  const CountedResponsiveContainer = (props: ComponentProps<typeof actual.ResponsiveContainer>) => {
+    chartRenders.count++;
+    return <actual.ResponsiveContainer {...props} />;
+  };
+  return { ...actual, ResponsiveContainer: CountedResponsiveContainer };
 });
 
 // Recharts' ResponsiveContainer needs ResizeObserver, which jsdom does not provide.
@@ -133,6 +147,25 @@ describe('Dashboard App UI Component', () => {
     await screen.findByText('RESOURCE_TELEMETRY');
     expect(fetchHistory).toHaveBeenLastCalledWith('https://example.test/history.json');
     expect(screen.queryByRole('note', { name: 'Sample data' })).not.toBeInTheDocument();
+  });
+
+  // In a production build, re-rendering the charts on every keystroke crashed the page after
+  // about 30 characters (React error #185). Typing must not re-render them at all.
+  it('does not re-render the charts while a data source URL is typed', async () => {
+    fetchHistory.mockResolvedValue({ snapshots: [snapshot('abc1234', [fn('mint', 100)])] });
+
+    render(<App />);
+    await screen.findByText('RESOURCE_TELEMETRY');
+    const rendersBefore = chartRenders.count;
+    expect(rendersBefore).toBeGreaterThan(0);
+
+    const input = screen.getByPlaceholderText('DATASOURCE_URL') as HTMLInputElement;
+    for (const ch of 'https://raw.githubusercontent.com/o/r/budgetgate-history/history.json') {
+      fireEvent.change(input, { target: { value: input.value + ch } });
+    }
+
+    expect(input.value).toBe('https://raw.githubusercontent.com/o/r/budgetgate-history/history.json');
+    expect(chartRenders.count).toBe(rendersBefore);
   });
 
   it('charts CPU, ledger bytes and footprint entries, and says when entries were not reported', async () => {
