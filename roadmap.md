@@ -6,7 +6,7 @@ Last updated: 2026-10-28
 
 ## Where I left off
 
-- `main` is at `9a61dba` (after #23, #24). Lint, tests (54 with the drill-down) and build pass.
+- `main` is at `5d75fed` (after #25). Lint, tests (85 with trend alerts) and build pass.
 - D9 done: `docs/`, the `docs:*` scripts, `vitepress`, `vue`, `react-markdown` (only `Docs.tsx` used it), the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md` are gone. READ DOCS links to budgetgate.github.io/docs/dashboard/; the EXTERNAL DOCS button (pointing at the stale Vercel copy) is removed.
 - Found during D9: `docs/` was deployed after all, by a second Vercel project `budgetgate-docs` (D11). The maintainer deleted that project on 2026-10-27; budgetgate-docs.vercel.app now returns `DEPLOYMENT_NOT_FOUND`, and commits get only the app's `Vercel` status.
 - D6 done: the 6 tests describe the current UI and pass; CI runs lint and tests before the build.
@@ -30,7 +30,8 @@ Last updated: 2026-10-28
 - D5 done: the data source is the Action's history branch, read from raw.githubusercontent.com (`access-control-allow-origin: *`, checked 2026-10-28). README updated. Seen end to end on 2026-10-28: the live site, given `https://raw.githubusercontent.com/BudgetGate/budgetgate-action-test/budgetgate-history/history.json` (two snapshots the Action wrote, commits `cedf1c2` and `e7497a4`), fetched it (200), dropped the Sample data note, showed latest commit `e7497a4`, regression state CLEAR, 1 function (`bump`), and drew all three charts across both commits (CPU at 291,573; entries 3 and 1), with no console errors (headless Chrome via puppeteer-core, 1280 px).
 - D15 done (found during that check): typing the URL key by key crashed the page (React error #185) in production builds; `MetricChart` is memoized and its series are constants, so typing no longer re-renders the charts. Checked against a local production build: 40, 99 and 200 typed characters and the real URL all work; it crashed at 40 before the fix. Checked on the live site after #20 deployed (headless Chrome): 40 and 200 typed characters and the real history URL all work.
 - Per-function drill-down done (2026-10-28): under the charts, a **Functions** table (each function's latest measurement, changes since its previous one, % of network cap, "not in latest snapshot" for removed functions) whose rows open a **History** table for one function (one row per snapshot, newest first; also opened by the filter). Tables rather than more charts, because the filter already charts one function; what was missing was the exact numbers and which commit moved them. Kept as page state, not a route, since Vercel has no SPA fallback. 54 tests. Checked in headless Chrome on a local production build at 1280 and 390 px (no page overflow, no console errors): the test repo's real `history.json` (3 snapshots, `bump` unchanged at 291,573) and core's counter v1 → v2 snapshots (CPU 291,573 → 449,005 shown as +54%, write bytes 80 → 380 +375%, entries 3 → 6 +100% and 1 → 4 +300%, cap 0.75% → 2%). Checked again on the live site after #23 deployed (bundle `index-HQdBaCgZ.js`), the same way and with the same results.
-- Next up: trend alerting across several commits, then GitHub reading with pagination and caching.
+- Trend alerting done (2026-10-28, rules decided by the maintainer): a **Trend alerts** panel above the charts flags, for functions in the latest snapshot, (1) a `pct_of_network_cap` line over the last 5 measurements that reaches 80% within 10 commits, and (2) a metric that rose in each of the last 3 measurements by 10% or more in total. Thresholds match core's `--cap-warning-pct`/`--max-delta-pct` defaults. Snapshots only carry the highest share of any cap, so the cap alert cannot say which metric; per-metric caps are not in the snapshot and the dashboard has no way to fetch them. 85 tests. Checked in headless Chrome on a local production build (1280 and 390 px, no overflow, no console errors): the sample and the test repo's real history show no alerts (real history: "the cap rule needs 5 measurements", it has 3); a five-commit test input (not a measurement) with the cap share 22 → 41% and CPU +13.5% over 3 small steps raised both alerts while the single-commit card stayed CLEAR, and each alert opened the history. No real contract history has triggered an alert yet.
+- Next up: GitHub reading with pagination and caching.
 
 ## Phase 1: See what exists, make CI honest
 
@@ -65,7 +66,7 @@ Last updated: 2026-10-28
 - [x] D2: README matches the app
 - [x] D16: `SECURITY.md` points to GitHub private vulnerability reporting instead of `security@budgetgate.io`, whose domain does not exist (found 2026-10-28)
 - [x] Per-function drill-down: functions table and per-function history table
-- [ ] Trend alerting across several commits (functions trending toward a cap)
+- [x] Trend alerting across several commits: cap projection and creep
 
 ## Maintainer actions (Claude must not do these)
 

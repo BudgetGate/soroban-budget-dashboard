@@ -198,6 +198,52 @@ describe('Dashboard App UI Component', () => {
     expect(await screen.findByText(status)).toBeInTheDocument();
   });
 
+  describe('trend alerts', () => {
+    it('flags a function whose CPU crept up over three commits and opens its history', async () => {
+      fetchHistory.mockResolvedValue({
+        snapshots: [
+          snapshot('c000001', [fn('mint', 1000), fn('burn', 500)]),
+          snapshot('c000002', [fn('mint', 1040), fn('burn', 500)]),
+          snapshot('c000003', [fn('mint', 1080), fn('burn', 500)]),
+          snapshot('c000004', [fn('mint', 1142), fn('burn', 500)]),
+        ],
+      });
+      render(<App />);
+
+      const alerts = await screen.findByRole('region', { name: 'Trend alerts' });
+      expect(alerts).toHaveTextContent('CPU instructions rose in each of the last 3 measurements, +14.2% in total (no single step above 10%)');
+      expect(alerts).toHaveTextContent('1,000 (c000001) → 1,040 (c000002) → 1,080 (c000003) → 1,142 (c000004)');
+      expect(alerts).not.toHaveTextContent('burn');
+      // The single-commit card does not see this: no step is above 10%.
+      expect(screen.getByText('Clear')).toBeInTheDocument();
+
+      fireEvent.click(within(alerts).getByRole('button', { name: 'Show history of mint' }));
+      expect(screen.getByRole('region', { name: 'History of mint' })).toBeInTheDocument();
+    });
+
+    it('flags a share of network cap projected to reach 80%', async () => {
+      const capped = (commit: string, pct: number) => snapshot(commit, [{ ...fn('mint', 1000), pct_of_network_cap: pct }]);
+      fetchHistory.mockResolvedValue({
+        snapshots: [capped('c1', 22), capped('c2', 27), capped('c3', 31), capped('c4', 36), capped('c5', 41)],
+      });
+      render(<App />);
+
+      const alerts = await screen.findByRole('region', { name: 'Trend alerts' });
+      expect(alerts).toHaveTextContent('Share of network cap 41%: projected to reach 80% in about 9 commits (+4.7 points per commit)');
+      expect(alerts).toHaveTextContent('Last 5: 22%, 27%, 31%, 36%, 41%');
+      expect(alerts).not.toHaveTextContent('The cap rule needs');
+    });
+
+    it('says when nothing is trending and when the cap rule has too little data', async () => {
+      fetchHistory.mockResolvedValue({ snapshots: [snapshot('abc1234', [fn('mint', 100)])] });
+      render(<App />);
+
+      const alerts = await screen.findByRole('region', { name: 'Trend alerts' });
+      expect(alerts).toHaveTextContent('No function is trending toward a cap or creeping up.');
+      expect(alerts).toHaveTextContent('The cap rule needs 5 measurements with a network-cap figure, which no function has here.');
+    });
+  });
+
   describe('per-function drill-down', () => {
     const history: SnapshotHistory = {
       snapshots: [
