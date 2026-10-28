@@ -27,7 +27,8 @@ Last updated: 2026-10-27
 - D14 done: below `md` the heading is 24 px with `tracking-wider` and may wrap; from `md` up it keeps 30 px/`tracking-widest` and does not shrink. Measured on `npm run dev`: right edge 349 px inside a 350 px box at 390 px (one line), wraps to two lines at 320 px, one line at 768 and 1280 px.
 - D2 done: README rewritten against the app and the D3/D4/D7/D8 behaviour: what it shows, the `https://` and `github://` sources, the Sample data note, the three charts, the CPU-only 10% regression card, errors and RATE_LIMITED, the missing history producer, Node 24 and `npm ci`, Vercel previews and deploys; links checked (all 200). Dropped: Memory as a metric, "stores", "Cyberpunk UI", the claim that the Action commits history the app reads, Node 18+, yarn, the broken `../CONTRIBUTING.md` link and the nonexistent code of conduct.
 - `PR_BODY.md` removed: a stale description of the Octokit PR that nothing referenced.
-- Next up: D5 (data source) needs a maintainer decision. No other open defects in this repo.
+- D5 done: the data source is the Action's history branch, read from raw.githubusercontent.com (`access-control-allow-origin: *`, checked 2026-10-28). README updated. Not yet seen end to end: needs the Action to run in a real repository and the page pointed at the resulting file.
+- Next up: no open defects. Check a real `history.json` in the browser once the Action has written one.
 
 ## Phase 1: See what exists, make CI honest
 
@@ -53,7 +54,7 @@ Last updated: 2026-10-27
 
 ## Phase 4: Real data (needs a decision)
 
-- [ ] D5: decide with the maintainer how snapshot history reaches the dashboard (public raw files, a token held only in the browser, or committed snapshot JSON). Blocked until decided.
+- [x] D5: decided 2026-10-28: the Action appends each default-branch snapshot to `history.json` on a `history-branch` (soroban-budget-action #24), and the dashboard reads it as a public raw file through its existing `https://` source. A browser token was rejected (each viewer would paste a token that sits in browser storage), and so were the Actions cache and artifacts (browsers cannot read them without auth). No dashboard code change was needed.
 - [ ] GitHub reading with pagination and caching (403/429 states done in D8)
 - [x] Loading, empty, rate-limited and error states
 
