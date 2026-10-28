@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { ChartPoint, MetricKey } from '../metrics';
 
@@ -91,4 +92,4 @@ function MetricChart({ title, unit, data, series }: MetricChartProps) {
   );
 }
 
-export default MetricChart;
+export default memo(MetricChart);

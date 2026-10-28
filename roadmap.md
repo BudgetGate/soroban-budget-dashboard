@@ -6,7 +6,7 @@ Last updated: 2026-10-27
 
 ## Where I left off
 
-- `main` is at `514e7aa` (after #17). Lint and build pass.
+- `main` is at `51f139f` (after #19). Lint, tests (43 after D15) and build pass.
 - D9 done: `docs/`, the `docs:*` scripts, `vitepress`, `vue`, `react-markdown` (only `Docs.tsx` used it), the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md` are gone. READ DOCS links to budgetgate.github.io/docs/dashboard/; the EXTERNAL DOCS button (pointing at the stale Vercel copy) is removed.
 - Found during D9: `docs/` was deployed after all, by a second Vercel project `budgetgate-docs` (D11). The maintainer deleted that project on 2026-10-27; budgetgate-docs.vercel.app now returns `DEPLOYMENT_NOT_FOUND`, and commits get only the app's `Vercel` status.
 - D6 done: the 6 tests describe the current UI and pass; CI runs lint and tests before the build.
@@ -27,8 +27,9 @@ Last updated: 2026-10-27
 - D14 done: below `md` the heading is 24 px with `tracking-wider` and may wrap; from `md` up it keeps 30 px/`tracking-widest` and does not shrink. Measured on `npm run dev`: right edge 349 px inside a 350 px box at 390 px (one line), wraps to two lines at 320 px, one line at 768 and 1280 px.
 - D2 done: README rewritten against the app and the D3/D4/D7/D8 behaviour: what it shows, the `https://` and `github://` sources, the Sample data note, the three charts, the CPU-only 10% regression card, errors and RATE_LIMITED, the missing history producer, Node 24 and `npm ci`, Vercel previews and deploys; links checked (all 200). Dropped: Memory as a metric, "stores", "Cyberpunk UI", the claim that the Action commits history the app reads, Node 18+, yarn, the broken `../CONTRIBUTING.md` link and the nonexistent code of conduct.
 - `PR_BODY.md` removed: a stale description of the Octokit PR that nothing referenced.
-- D5 done: the data source is the Action's history branch, read from raw.githubusercontent.com (`access-control-allow-origin: *`, checked 2026-10-28). README updated. Not yet seen end to end: needs the Action to run in a real repository and the page pointed at the resulting file.
-- Next up: no open defects. Check a real `history.json` in the browser once the Action has written one.
+- D5 done: the data source is the Action's history branch, read from raw.githubusercontent.com (`access-control-allow-origin: *`, checked 2026-10-28). README updated. Seen end to end on 2026-10-28: the live site, given `https://raw.githubusercontent.com/BudgetGate/budgetgate-action-test/budgetgate-history/history.json` (two snapshots the Action wrote, commits `cedf1c2` and `e7497a4`), fetched it (200), dropped the Sample data note, showed latest commit `e7497a4`, regression state CLEAR, 1 function (`bump`), and drew all three charts across both commits (CPU at 291,573; entries 3 and 1), with no console errors (headless Chrome via puppeteer-core, 1280 px).
+- D15 done (found during that check): typing the URL key by key crashed the page (React error #185) in production builds; `MetricChart` is memoized and its series are constants, so typing no longer re-renders the charts. Checked against a local production build: 40, 99 and 200 typed characters and the real URL all work; it crashed at 40 before the fix.
+- Next up: no open defects. Per-function drill-down and trend alerting are the remaining roadmap items.
 
 ## Phase 1: See what exists, make CI honest
 

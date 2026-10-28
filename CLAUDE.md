@@ -38,10 +38,12 @@ Scripts: `dev`, `build` (`tsc -b && vite build`), `lint` (`oxlint`), `preview`, 
 
 ## 3. Known defects
 
-Checked 2026-10-26 against `origin/main` (`4fdd186`).
+Checked 2026-10-28 against `origin/main` (`51f139f`).
 
 | ID | Defect | Evidence |
 |----|--------|----------|
+
+Resolved and removed, latest first: D15 (found 2026-10-28 in a browser check of the live site, fixed in #20): typing a data-source URL key by key crashed the whole page after about 30 characters with React error #185 (maximum update depth), in production builds only; pasting did not. Each keystroke re-rendered all three Recharts charts with new `series` arrays. `MetricChart` is now `memo`ized and the series are module constants, so typing no longer re-renders the charts; `App.test.tsx` counts chart renders while typing (140 without the fix, 2 with it). The exact mechanism inside Recharts 3.10 was not pinned down: switching the function filter 60 times, which re-renders the charts with new data, never crashed.
 
 ## 4. Work order for this repo
 
