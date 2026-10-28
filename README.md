@@ -13,6 +13,8 @@ Budget Gate is not audited and not production-ready.
   - `https://…`: any URL that returns the JSON.
   - `github://owner/repo/branch/path/to/history.json`: a file in a public repository, read through the GitHub REST API without a token (60 requests per hour per IP address).
 
+  The [GitHub Action](https://github.com/BudgetGate/soroban-budget-action) writes this file when its `history-branch` input is set: each push to the default branch appends that commit's snapshot to `history.json` on the branch. For a public repository, enter `https://raw.githubusercontent.com/<owner>/<repo>/budgetgate-history/history.json` (GitHub serves it to browsers on other sites and may cache it for up to 5 minutes).
+
   Without a URL, the page shows built-in examples under a **Sample data** note. They are not measurements.
 - **Charts**, per snapshot, for one function or all functions summed:
   - CPU instructions
@@ -25,7 +27,7 @@ Budget Gate is not audited and not production-ready.
 
 ## Limitations
 
-- Nothing in Budget Gate produces the history file yet. Core writes one snapshot per run, and the GitHub Action keeps it in the Actions cache, which a browser cannot read. You have to build the file yourself from saved snapshots.
+- History needs the GitHub Action's `history-branch` input (in the Action's `main`, not in a release yet). Private repositories cannot be read: the dashboard has no token.
 - Results are not cached, and entering the same URL again does not reload it.
 
 ## Development
