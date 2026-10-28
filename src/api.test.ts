@@ -104,11 +104,24 @@ describe('fetchSnapshotHistory', () => {
     expect(error).toBeInstanceOf(RateLimitError);
   });
 
-  it('reads and checks a history file from GitHub', async () => {
+  it('reads and checks a history file from GitHub as raw content', async () => {
     const history = { snapshots: [snapshot('2.0')] };
-    getContent.mockResolvedValue({ data: { type: 'file', content: btoa(JSON.stringify(history)) } });
+    getContent.mockResolvedValue({ data: JSON.stringify(history) });
 
     await expect(fetchSnapshotHistory('github://owner/repo/main/history.json')).resolves.toEqual(history);
-    expect(getContent).toHaveBeenCalledWith({ owner: 'owner', repo: 'repo', ref: 'main', path: 'history.json' });
+    expect(getContent).toHaveBeenCalledWith({
+      owner: 'owner', repo: 'repo', ref: 'main', path: 'history.json', mediaType: { format: 'raw' },
+    });
+  });
+
+  // GitHub's JSON form of a file over 1 MB: no content (checked on a 2.4 MB file, 2026-10-28).
+  // The raw form is a string, so this shape can only come back for something that is not a file.
+  it.each([
+    { name: 'a directory listing', data: [{ type: 'file', name: 'history.json' }] },
+    { name: 'a JSON file object without content', data: { type: 'file', encoding: 'none', content: '' } },
+  ])('rejects $name', async ({ data }) => {
+    getContent.mockResolvedValue({ data });
+
+    await expect(fetchSnapshotHistory('github://owner/repo/main/history')).rejects.toThrow('GitHub API fetch failed: Not a valid file');
   });
 });
