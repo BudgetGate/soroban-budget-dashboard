@@ -6,7 +6,7 @@ Last updated: 2026-10-28
 
 ## Where I left off
 
-- `main` is at `726387b` (after #26). Lint, tests (85 with trend alerts) and build pass.
+- `main` is at `53029e5` (after #27). Lint, tests (87 after D17) and build pass.
 - D9 done: `docs/`, the `docs:*` scripts, `vitepress`, `vue`, `react-markdown` (only `Docs.tsx` used it), the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md` are gone. READ DOCS links to budgetgate.github.io/docs/dashboard/; the EXTERNAL DOCS button (pointing at the stale Vercel copy) is removed.
 - Found during D9: `docs/` was deployed after all, by a second Vercel project `budgetgate-docs` (D11). The maintainer deleted that project on 2026-10-27; budgetgate-docs.vercel.app now returns `DEPLOYMENT_NOT_FOUND`, and commits get only the app's `Vercel` status.
 - D6 done: the 6 tests describe the current UI and pass; CI runs lint and tests before the build.
@@ -31,7 +31,9 @@ Last updated: 2026-10-28
 - D15 done (found during that check): typing the URL key by key crashed the page (React error #185) in production builds; `MetricChart` is memoized and its series are constants, so typing no longer re-renders the charts. Checked against a local production build: 40, 99 and 200 typed characters and the real URL all work; it crashed at 40 before the fix. Checked on the live site after #20 deployed (headless Chrome): 40 and 200 typed characters and the real history URL all work.
 - Per-function drill-down done (2026-10-28): under the charts, a **Functions** table (each function's latest measurement, changes since its previous one, % of network cap, "not in latest snapshot" for removed functions) whose rows open a **History** table for one function (one row per snapshot, newest first; also opened by the filter). Tables rather than more charts, because the filter already charts one function; what was missing was the exact numbers and which commit moved them. Kept as page state, not a route, since Vercel has no SPA fallback. 54 tests. Checked in headless Chrome on a local production build at 1280 and 390 px (no page overflow, no console errors): the test repo's real `history.json` (3 snapshots, `bump` unchanged at 291,573) and core's counter v1 → v2 snapshots (CPU 291,573 → 449,005 shown as +54%, write bytes 80 → 380 +375%, entries 3 → 6 +100% and 1 → 4 +300%, cap 0.75% → 2%). Checked again on the live site after #23 deployed (bundle `index-HQdBaCgZ.js`), the same way and with the same results.
 - Trend alerting done (2026-10-28, rules decided by the maintainer): a **Trend alerts** panel above the charts flags, for functions in the latest snapshot, (1) a `pct_of_network_cap` line over the last 5 measurements that reaches 80% within 10 commits, and (2) a metric that rose in each of the last 3 measurements by 10% or more in total. Thresholds match core's `--cap-warning-pct`/`--max-delta-pct` defaults. Snapshots only carry the highest share of any cap, so the cap alert cannot say which metric; per-metric caps are not in the snapshot and the dashboard has no way to fetch them. 85 tests. Checked in headless Chrome on a local production build (1280 and 390 px, no overflow, no console errors): the sample and the test repo's real history show no alerts (real history: "the cap rule needs 5 measurements", it has 3); a five-commit test input (not a measurement) with the cap share 22 → 41% and CPU +13.5% over 3 small steps raised both alerts while the single-commit card stayed CLEAR, and each alert opened the history. Checked again on the live site after #26 deployed (bundle `index-LCFEbIQi.js`), the same four runs with the same results. No real contract history has triggered an alert yet.
-- Next up: GitHub reading with pagination and caching.
+- Pagination dropped (2026-10-28): it was planned when the dashboard would read one snapshot file per commit through the API. Since D5 the history is one `history.json` capped at 200 snapshots, so there is nothing to page.
+- D17 done: `github://` reads with the raw media type, so histories over 1 MB load (the JSON form leaves `content` empty above 1 MB). Checked in headless Chrome against the real test-repo history and a 2.4 MB public file.
+- Next up: caching and a working refresh. Without a token a conditional request (`If-None-Match`, 304) still costs one of the 60 requests per hour (checked 2026-10-28: remaining 47 → 46), so caching means not asking: keep a `github://` result for the 60 s GitHub marks it fresh (`Cache-Control: max-age=60`). Refreshing with the same URL does nothing today; it should reload.
 
 ## Phase 1: See what exists, make CI honest
 
@@ -58,7 +60,8 @@ Last updated: 2026-10-28
 ## Phase 4: Real data (needs a decision)
 
 - [x] D5: decided 2026-10-28: the Action appends each default-branch snapshot to `history.json` on a `history-branch` (soroban-budget-action #24), and the dashboard reads it as a public raw file through its existing `https://` source. A browser token was rejected (each viewer would paste a token that sits in browser storage), and so were the Actions cache and artifacts (browsers cannot read them without auth). No dashboard code change was needed.
-- [ ] GitHub reading with pagination and caching (403/429 states done in D8)
+- [x] GitHub reading of large files: raw media type, so histories over 1 MB load (D17)
+- [ ] Caching of GitHub reads and a refresh that reloads (403/429 states done in D8; pagination dropped: the history is one file)
 - [x] Loading, empty, rate-limited and error states
 
 ## Phase 5: Polish

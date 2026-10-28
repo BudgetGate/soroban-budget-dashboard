@@ -184,17 +184,24 @@ export async function fetchSnapshotHistory(dataSourceUrl?: string): Promise<Snap
       const octokit = new Octokit();
       let content: string;
       try {
+        // The raw media type returns the file itself. The default JSON response leaves `content`
+        // empty for files over 1 MB, which a long history of a contract with many functions
+        // reaches (checked 2026-10-28).
         const response = await octokit.rest.repos.getContent({
           owner,
           repo,
           path,
           ref,
+          mediaType: { format: 'raw' },
         });
 
-        if (Array.isArray(response.data) || response.data.type !== 'file' || !response.data.content) {
+        // Octokit types the response as the JSON form; with the raw media type a file arrives
+        // as a string, and a directory still arrives as its JSON listing.
+        const data: unknown = response.data;
+        if (typeof data !== 'string') {
           throw new Error('Not a valid file');
         }
-        content = atob(response.data.content);
+        content = data;
       } catch (error: unknown) {
         if (isOctokitRequestError(error)) {
           const headers = error.response?.headers ?? {};
