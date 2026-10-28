@@ -46,3 +46,71 @@ export function toChartPoints(snapshots: Snapshot[], selectedFunction: string): 
     return point;
   });
 }
+
+// One function's measurement in one snapshot, for the drill-down tables.
+export interface FunctionRow {
+  commit: string;
+  generatedAt: string;
+  // false when the snapshot does not contain the function; values are then all null.
+  present: boolean;
+  values: Record<MetricKey, number | null>;
+  // Percent change of each metric since the function's previous measurement; null when there
+  // is none, either value is unknown, or the previous value was 0.
+  changePct: Record<MetricKey, number | null>;
+  // core's pct_of_network_cap; null when the snapshot predates core reading network caps (0).
+  pctOfNetworkCap: number | null;
+}
+
+function emptyMetrics(): Record<MetricKey, number | null> {
+  return { cpu_instructions: null, read_bytes: null, write_bytes: null, read_entries: null, write_entries: null };
+}
+
+// The function's row for every snapshot, oldest first. Changes are taken against the last
+// snapshot that contained the function, so a gap in the history does not hide a jump.
+export function functionHistory(snapshots: Snapshot[], name: string): FunctionRow[] {
+  let previous: Record<MetricKey, number | null> | null = null;
+  return snapshots.map(snapshot => {
+    const fn = snapshot.functions.find(f => f.name === name);
+    const row: FunctionRow = {
+      commit: snapshot.commit_sha.substring(0, 7),
+      generatedAt: snapshot.generated_at,
+      present: fn !== undefined,
+      values: emptyMetrics(),
+      changePct: emptyMetrics(),
+      pctOfNetworkCap: null,
+    };
+    if (!fn) return row;
+    for (const key of METRIC_KEYS) {
+      const value = valueOf(fn, key);
+      const before = previous ? previous[key] : null;
+      row.values[key] = value;
+      row.changePct[key] = value !== null && before !== null && before !== 0 ? ((value - before) / before) * 100 : null;
+    }
+    row.pctOfNetworkCap = fn.pct_of_network_cap > 0 ? fn.pct_of_network_cap : null;
+    previous = row.values;
+    return row;
+  });
+}
+
+// One row per function in the history: its latest measurement, and whether the latest
+// snapshot still contains it. Functions in the latest snapshot come first, in its order.
+export interface FunctionSummary {
+  name: string;
+  latest: FunctionRow;
+  inLatestSnapshot: boolean;
+}
+
+export function functionSummaries(snapshots: Snapshot[]): FunctionSummary[] {
+  if (snapshots.length === 0) return [];
+  const names: string[] = [];
+  for (const snapshot of [...snapshots].reverse()) {
+    for (const fn of snapshot.functions) {
+      if (!names.includes(fn.name)) names.push(fn.name);
+    }
+  }
+  const latestNames = new Set(snapshots[snapshots.length - 1].functions.map(f => f.name));
+  return names.map(name => {
+    const rows = functionHistory(snapshots, name).filter(r => r.present);
+    return { name, latest: rows[rows.length - 1], inLatestSnapshot: latestNames.has(name) };
+  });
+}

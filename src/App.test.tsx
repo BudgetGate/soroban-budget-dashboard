@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from './App';
@@ -112,7 +112,7 @@ describe('Dashboard App UI Component', () => {
     expect(await screen.findByText('RESOURCE_TELEMETRY')).toBeInTheDocument();
     expect(screen.getByText('SYS.REGRESSION_STATE')).toBeInTheDocument();
     expect(screen.getByText('Clear')).toBeInTheDocument();
-    expect(screen.getByText('abc1234')).toBeInTheDocument();
+    expect(screen.getByText('SYS.LATEST_COMMIT').parentElement?.parentElement).toHaveTextContent('abc1234');
 
     const select = screen.getByLabelText(/FILTER_VECTOR/i);
     expect(select).toBeInTheDocument();
@@ -196,5 +196,68 @@ describe('Dashboard App UI Component', () => {
     render(<App />);
 
     expect(await screen.findByText(status)).toBeInTheDocument();
+  });
+
+  describe('per-function drill-down', () => {
+    const history: SnapshotHistory = {
+      snapshots: [
+        snapshot('aaaaaaa1', [fn('mint', 100), fn('old', 70)]),
+        snapshot('bbbbbbb2', [fn('mint', 150), fn('burn', 200)]),
+      ],
+    };
+
+    it('lists every function with its latest measurement and change', async () => {
+      fetchHistory.mockResolvedValue(history);
+      render(<App />);
+
+      const table = await screen.findByRole('region', { name: 'Functions' });
+      const rows = within(table).getAllByRole('row').slice(1);
+      expect(rows.map(r => within(r).getByRole('rowheader').textContent)).toEqual(['mint', 'burn', 'old']);
+      expect(rows[0]).toHaveTextContent('150+50%');
+      expect(rows[1]).toHaveTextContent('200');
+      expect(rows[2]).toHaveTextContent('aaaaaaanot in latest snapshot');
+      // Schema 1.0 snapshots have no entry counts and no network-cap figure.
+      expect(rows[0]).toHaveTextContent('not reported');
+      expect(rows[0]).toHaveTextContent('not recorded');
+    });
+
+    it('opens a function history from the table and returns to all functions', async () => {
+      fetchHistory.mockResolvedValue(history);
+      render(<App />);
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Show history of old' }));
+
+      const detail = screen.getByRole('region', { name: 'History of old' });
+      const rows = within(detail).getAllByRole('row').slice(1);
+      expect(rows.map(r => within(r).getByRole('rowheader').textContent)).toEqual(['bbbbbbb', 'aaaaaaa']);
+      expect(rows[0]).toHaveTextContent('Not in this snapshot');
+      expect(rows[1]).toHaveTextContent('70');
+      expect(screen.getByLabelText(/FILTER_VECTOR/i)).toHaveValue('old');
+      expect(screen.queryByRole('region', { name: 'Functions' })).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'All functions' }));
+      expect(screen.getByRole('region', { name: 'Functions' })).toBeInTheDocument();
+      expect(screen.getByLabelText(/FILTER_VECTOR/i)).toHaveValue('all');
+    });
+
+    it('shows the history when a function is picked in the filter', async () => {
+      fetchHistory.mockResolvedValue(history);
+      render(<App />);
+
+      fireEvent.change(await screen.findByLabelText(/FILTER_VECTOR/i), { target: { value: 'mint' } });
+
+      const rows = within(screen.getByRole('region', { name: 'History of mint' })).getAllByRole('row').slice(1);
+      expect(rows[0]).toHaveTextContent('150+50%');
+      expect(rows[1]).toHaveTextContent('100');
+      expect(rows[1]).not.toHaveTextContent('%');
+    });
+
+    it('says when a snapshot has no commit SHA', async () => {
+      fetchHistory.mockResolvedValue({ snapshots: [snapshot('', [fn('mint', 100)])] });
+      render(<App />);
+
+      const row = within(await screen.findByRole('region', { name: 'Functions' })).getAllByRole('row')[1];
+      expect(row).toHaveTextContent('mintnot recorded');
+    });
   });
 });
