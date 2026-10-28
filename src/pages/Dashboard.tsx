@@ -5,6 +5,8 @@ import type { SnapshotHistory } from '../api';
 import { functionHistory, functionSummaries, toChartPoints } from '../metrics';
 import MetricChart from '../components/MetricChart';
 import { FunctionHistoryTable, FunctionsTable } from '../components/FunctionTables';
+import TrendAlerts from '../components/TrendAlerts';
+import { capRuleApplies, findTrends } from '../trends';
 import type { MetricSeries } from '../components/MetricChart';
 import '../App.css';
 
@@ -71,6 +73,9 @@ function Dashboard() {
   );
 
   const showAllFunctions = useCallback(() => setSelectedFunction('all'), []);
+
+  const trends = useMemo(() => (history ? findTrends(history.snapshots) : []), [history]);
+  const capRuleUsable = useMemo(() => (history ? capRuleApplies(history.snapshots) : false), [history]);
 
   const latestSnapshot = history?.snapshots[history.snapshots.length - 1];
   const previousSnapshot = history?.snapshots[history.snapshots.length - 2];
@@ -235,6 +240,8 @@ function Dashboard() {
                 <p className="text-[10px] text-[#00ff9d]/50 uppercase mt-1">Smart contract functions currently profiled.</p>
               </div>
             </div>
+
+            <TrendAlerts trends={trends} capRuleApplies={capRuleUsable} onSelect={setSelectedFunction} />
 
             {/* Charts Section */}
             <div className="glass-panel overflow-hidden">

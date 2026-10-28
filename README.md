@@ -28,6 +28,11 @@ Budget Gate is not audited and not production-ready.
 
   An unreported value says "not reported"; a `pct_of_network_cap` of 0 (snapshots made before core read network caps) and an empty commit SHA say "not recorded".
 - **Cards:** the latest commit, the number of tracked functions, and a regression state that flags a CPU increase of more than 10% between the last two snapshots. Only CPU is checked and the 10% is fixed; core's own thresholds are not applied here.
+- **Trend alerts**, above the charts, for functions in the latest snapshot. They catch slow growth that the single-commit card misses:
+  - **Cap projection:** a least-squares line through the function's `pct_of_network_cap` over its last 5 measurements; flagged when the line reaches 80% within 10 commits, or the share is already at 80%. Needs 5 measurements with a cap figure (snapshots made before core read caps have 0 and are skipped); the panel says when no function has them. `pct_of_network_cap` is the highest share of any one metric's cap, so the alert does not say which metric.
+  - **Creep:** a metric that rose in each of the function's last 3 measurements and by 10% or more in total.
+
+  The 80% and 10% match core's `--cap-warning-pct` and `--max-delta-pct` defaults; they are fixed here. Each alert shows the numbers behind it and opens the function's history.
 - **Errors:** an unknown `schema_version` or a malformed history is shown as an error naming the snapshot. A GitHub rate limit (403/429) is shown as **RATE_LIMITED** with the time to try again, when GitHub gives one.
 
 ## Limitations
