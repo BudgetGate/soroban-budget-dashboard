@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Activity, CheckCircle2, AlertTriangle, Settings, RefreshCw, Zap, Server, Database, ChevronDown, Info, BookOpen, Clock, FlaskConical } from 'lucide-react';
 import { fetchSnapshotHistory, RateLimitError } from '../api';
 import type { SnapshotHistory } from '../api';
-import { toChartPoints } from '../metrics';
+import { functionHistory, functionSummaries, toChartPoints } from '../metrics';
 import MetricChart from '../components/MetricChart';
+import { FunctionHistoryTable, FunctionsTable } from '../components/FunctionTables';
 import type { MetricSeries } from '../components/MetricChart';
 import '../App.css';
 
@@ -61,6 +62,15 @@ function Dashboard() {
     () => (history ? toChartPoints(history.snapshots, selectedFunction) : []),
     [history, selectedFunction]
   );
+
+  const summaries = useMemo(() => (history ? functionSummaries(history.snapshots) : []), [history]);
+
+  const selectedHistory = useMemo(
+    () => (history && selectedFunction !== 'all' ? functionHistory(history.snapshots, selectedFunction) : []),
+    [history, selectedFunction]
+  );
+
+  const showAllFunctions = useCallback(() => setSelectedFunction('all'), []);
 
   const latestSnapshot = history?.snapshots[history.snapshots.length - 1];
   const previousSnapshot = history?.snapshots[history.snapshots.length - 2];
@@ -276,6 +286,11 @@ function Dashboard() {
                 data={chartData}
                 series={ENTRIES_SERIES}
               />
+              {selectedFunction === 'all' ? (
+                <FunctionsTable summaries={summaries} onSelect={setSelectedFunction} />
+              ) : (
+                <FunctionHistoryTable name={selectedFunction} rows={selectedHistory} onBack={showAllFunctions} />
+              )}
             </div>
           </div>
         )}

@@ -6,7 +6,7 @@ Last updated: 2026-10-28
 
 ## Where I left off
 
-- `main` is at `460abf3` (after #20). Lint, tests (43 after D15) and build pass.
+- `main` is at `26c82f1` (after #22). Lint, tests (54 with the drill-down) and build pass.
 - D9 done: `docs/`, the `docs:*` scripts, `vitepress`, `vue`, `react-markdown` (only `Docs.tsx` used it), the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md` are gone. READ DOCS links to budgetgate.github.io/docs/dashboard/; the EXTERNAL DOCS button (pointing at the stale Vercel copy) is removed.
 - Found during D9: `docs/` was deployed after all, by a second Vercel project `budgetgate-docs` (D11). The maintainer deleted that project on 2026-10-27; budgetgate-docs.vercel.app now returns `DEPLOYMENT_NOT_FOUND`, and commits get only the app's `Vercel` status.
 - D6 done: the 6 tests describe the current UI and pass; CI runs lint and tests before the build.
@@ -29,7 +29,8 @@ Last updated: 2026-10-28
 - `PR_BODY.md` removed: a stale description of the Octokit PR that nothing referenced.
 - D5 done: the data source is the Action's history branch, read from raw.githubusercontent.com (`access-control-allow-origin: *`, checked 2026-10-28). README updated. Seen end to end on 2026-10-28: the live site, given `https://raw.githubusercontent.com/BudgetGate/budgetgate-action-test/budgetgate-history/history.json` (two snapshots the Action wrote, commits `cedf1c2` and `e7497a4`), fetched it (200), dropped the Sample data note, showed latest commit `e7497a4`, regression state CLEAR, 1 function (`bump`), and drew all three charts across both commits (CPU at 291,573; entries 3 and 1), with no console errors (headless Chrome via puppeteer-core, 1280 px).
 - D15 done (found during that check): typing the URL key by key crashed the page (React error #185) in production builds; `MetricChart` is memoized and its series are constants, so typing no longer re-renders the charts. Checked against a local production build: 40, 99 and 200 typed characters and the real URL all work; it crashed at 40 before the fix. Checked on the live site after #20 deployed (headless Chrome): 40 and 200 typed characters and the real history URL all work.
-- Next up: no open defects. Per-function drill-down and trend alerting are the remaining roadmap items.
+- Per-function drill-down done (2026-10-28): under the charts, a **Functions** table (each function's latest measurement, changes since its previous one, % of network cap, "not in latest snapshot" for removed functions) whose rows open a **History** table for one function (one row per snapshot, newest first; also opened by the filter). Tables rather than more charts, because the filter already charts one function; what was missing was the exact numbers and which commit moved them. Kept as page state, not a route, since Vercel has no SPA fallback. 54 tests. Checked in headless Chrome on a local production build at 1280 and 390 px (no page overflow, no console errors): the test repo's real `history.json` (3 snapshots, `bump` unchanged at 291,573) and core's counter v1 → v2 snapshots (CPU 291,573 → 449,005 shown as +54%, write bytes 80 → 380 +375%, entries 3 → 6 +100% and 1 → 4 +300%, cap 0.75% → 2%).
+- Next up: trend alerting across several commits, then GitHub reading with pagination and caching.
 
 ## Phase 1: See what exists, make CI honest
 
@@ -63,7 +64,7 @@ Last updated: 2026-10-28
 
 - [x] D2: README matches the app
 - [x] D16: `SECURITY.md` points to GitHub private vulnerability reporting instead of `security@budgetgate.io`, whose domain does not exist (found 2026-10-28)
-- [ ] Per-function drill-down
+- [x] Per-function drill-down: functions table and per-function history table
 - [ ] Trend alerting across several commits (functions trending toward a cap)
 
 ## Maintainer actions (Claude must not do these)

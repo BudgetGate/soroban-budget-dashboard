@@ -22,6 +22,11 @@ Budget Gate is not audited and not production-ready.
   - Footprint entries: all and read-write
 
   A value that is missing or `null` is drawn as a gap, not as 0. Memory is not charted, because core records it as `null`.
+- **Per-function tables**, under the charts:
+  - With all functions selected, **Functions** lists each function's latest measurement: the commit it came from, every metric with its change since the function's previous measurement, and its `pct_of_network_cap`. A function missing from the latest snapshot is marked "not in latest snapshot".
+  - Selecting a function (in that table or the filter) shows its **History**: one row per snapshot, newest first, with each metric and its change, so a jump can be traced to its commit. Changes are against the last snapshot that contained the function; there is no change from a previous value of 0 or to an unknown value.
+
+  An unreported value says "not reported"; a `pct_of_network_cap` of 0 (snapshots made before core read network caps) and an empty commit SHA say "not recorded".
 - **Cards:** the latest commit, the number of tracked functions, and a regression state that flags a CPU increase of more than 10% between the last two snapshots. Only CPU is checked and the 10% is fixed; core's own thresholds are not applied here.
 - **Errors:** an unknown `schema_version` or a malformed history is shown as an error naming the snapshot. A GitHub rate limit (403/429) is shown as **RATE_LIMITED** with the time to try again, when GitHub gives one.
 
