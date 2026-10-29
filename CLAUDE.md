@@ -50,7 +50,7 @@ Resolved and removed, latest first: D17 (found 2026-10-28 while planning GitHub 
 
 ## 4. Work order for this repo
 
-1. Check caching and refresh in a browser (built 2026-10-29, not yet checked). Then no roadmap items are left; pagination was dropped (one `history.json`, at most 200 snapshots). Per-function drill-down, trend alerting and large GitHub files (D17) are done (2026-10-28).
+1. No roadmap items left (2026-10-29). Done: per-function drill-down, trend alerting, large GitHub files (D17), and caching with a refresh that reloads (checked locally and live). Pagination was dropped (one `history.json`, at most 200 snapshots). New work starts from a new defect or a maintainer request.
 
 `roadmap.md` tracks progress against this list.
 
