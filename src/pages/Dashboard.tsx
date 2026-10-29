@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Activity, CheckCircle2, AlertTriangle, Settings, RefreshCw, Zap, Server, Database, ChevronDown, Info, BookOpen, Clock, FlaskConical } from 'lucide-react';
-import { fetchSnapshotHistory, RateLimitError } from '../api';
+import { fetchSnapshotHistory, githubFetchInfo, RateLimitError } from '../api';
 import type { SnapshotHistory } from '../api';
 import { functionHistory, functionSummaries, toChartPoints } from '../metrics';
 import MetricChart from '../components/MetricChart';
@@ -28,6 +28,9 @@ function Dashboard() {
   const [selectedFunction, setSelectedFunction] = useState<string>('all');
   const [dataSourceUrl, setDataSourceUrl] = useState<string>('');
   const [tempUrl, setTempUrl] = useState<string>('');
+  // Bumped by the refresh button, so applying the same URL again reloads it.
+  const [reloadCount, setReloadCount] = useState(0);
+  const [fetchInfo, setFetchInfo] = useState<{ fetchedAt: Date; freshUntil: Date } | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -37,6 +40,7 @@ function Dashboard() {
       .then(data => {
         if (isMounted) {
           setHistory(data);
+          setFetchInfo(dataSourceUrl.startsWith('github://') ? githubFetchInfo(dataSourceUrl) : null);
           setLoading(false);
         }
       })
@@ -47,10 +51,11 @@ function Dashboard() {
         }
       });
     return () => { isMounted = false };
-  }, [dataSourceUrl]);
+  }, [dataSourceUrl, reloadCount]);
 
   const handleApplyUrl = () => {
     setDataSourceUrl(tempUrl);
+    setReloadCount(count => count + 1);
   };
 
   const allFunctions = useMemo(() => {
@@ -175,6 +180,14 @@ function Dashboard() {
                   </p>
                 </div>
               </div>
+            )}
+
+            {fetchInfo && (
+              <p role="status" aria-label="Fetch time" className="text-[10px] text-[#00ff9d]/60 uppercase mb-4 flex items-center gap-2">
+                <Clock className="w-3 h-3 shrink-0" />
+                Fetched from GitHub at {fetchInfo.fetchedAt.toLocaleTimeString()}.
+                {fetchInfo.freshUntil > fetchInfo.fetchedAt && ` Refreshing before ${fetchInfo.freshUntil.toLocaleTimeString()} reuses this copy, which GitHub marks as fresh until then.`}
+              </p>
             )}
 
             {/* Info Section */}
