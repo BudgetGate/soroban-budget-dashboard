@@ -1,6 +1,6 @@
 import type { ComponentProps } from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from './App';
 import * as api from './api';
