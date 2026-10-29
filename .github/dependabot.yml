@@ -11,6 +11,10 @@ updates:
       development:
         dependency-type: development
         update-types: [ minor, patch ]
+    ignore:
+      # Node's type definitions follow the Node version the app is built with (24, as in CI).
+      - dependency-name: "@types/node"
+        update-types: [ "version-update:semver-major" ]
   - package-ecosystem: github-actions
     directory: /
     schedule:
