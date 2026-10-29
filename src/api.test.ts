@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { fetchSnapshotHistory, parseHistory, rateLimitFrom, RateLimitError } from './api';
+import { clearGithubCache, fetchSnapshotHistory, githubFetchInfo, maxAgeSeconds, parseHistory, rateLimitFrom, RateLimitError } from './api';
 
 const getContent = vi.fn();
 
@@ -67,6 +67,7 @@ describe('fetchSnapshotHistory', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     getContent.mockReset();
+    clearGithubCache();
   });
 
   it('turns a rate-limited fetch into a RateLimitError', async () => {
@@ -106,7 +107,7 @@ describe('fetchSnapshotHistory', () => {
 
   it('reads and checks a history file from GitHub as raw content', async () => {
     const history = { snapshots: [snapshot('2.0')] };
-    getContent.mockResolvedValue({ data: JSON.stringify(history) });
+    getContent.mockResolvedValue({ data: JSON.stringify(history), headers: {} });
 
     await expect(fetchSnapshotHistory('github://owner/repo/main/history.json')).resolves.toEqual(history);
     expect(getContent).toHaveBeenCalledWith({
@@ -123,5 +124,64 @@ describe('fetchSnapshotHistory', () => {
     getContent.mockResolvedValue({ data });
 
     await expect(fetchSnapshotHistory('github://owner/repo/main/history')).rejects.toThrow('GitHub API fetch failed: Not a valid file');
+  });
+
+  describe('reusing GitHub reads', () => {
+    const url = 'github://owner/repo/main/history.json';
+    const history = { snapshots: [snapshot('2.0')] };
+    // The Contents API's own header (checked 2026-10-28).
+    const fresh60 = { data: JSON.stringify(history), headers: { 'cache-control': 'public, max-age=60, s-maxage=60' } };
+
+    it('reuses a result for its max-age and fetches again after it', async () => {
+      getContent.mockResolvedValue(fresh60);
+      const t0 = Date.UTC(2026, 9, 29, 12, 0, 0);
+
+      await fetchSnapshotHistory(url, () => t0);
+      await expect(fetchSnapshotHistory(url, () => t0 + 59_999)).resolves.toEqual(history);
+      expect(getContent).toHaveBeenCalledTimes(1);
+      expect(githubFetchInfo(url)).toEqual({ fetchedAt: new Date(t0), freshUntil: new Date(t0 + 60_000) });
+
+      await fetchSnapshotHistory(url, () => t0 + 60_000);
+      expect(getContent).toHaveBeenCalledTimes(2);
+      expect(githubFetchInfo(url)?.fetchedAt).toEqual(new Date(t0 + 60_000));
+    });
+
+    it('fetches every time when the response has no max-age', async () => {
+      getContent.mockResolvedValue({ data: JSON.stringify(history), headers: {} });
+
+      await fetchSnapshotHistory(url, () => 1000);
+      await fetchSnapshotHistory(url, () => 1001);
+      expect(getContent).toHaveBeenCalledTimes(2);
+    });
+
+    it('keeps each URL separately', async () => {
+      getContent.mockResolvedValue(fresh60);
+
+      await fetchSnapshotHistory(url, () => 1000);
+      await fetchSnapshotHistory('github://owner/repo/main/other.json', () => 1001);
+      expect(getContent).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not keep a history that fails its checks', async () => {
+      getContent.mockResolvedValue({ ...fresh60, data: JSON.stringify({ snapshots: [snapshot('3.0')] }) });
+
+      await expect(fetchSnapshotHistory(url, () => 1000)).rejects.toThrow(/schema_version "3\.0"/);
+      expect(githubFetchInfo(url)).toBeNull();
+    });
+  });
+});
+
+describe('maxAgeSeconds', () => {
+  it.each([
+    { header: 'public, max-age=60, s-maxage=60', want: 60 },
+    { header: 'max-age=300', want: 300 },
+    { header: 'private, max-age=60', want: 60 },
+    { header: 'no-cache', want: 0 },
+    { header: 'max-age=60, no-store', want: 0 },
+    { header: 's-maxage=60', want: 0 },
+    { header: '', want: 0 },
+    { header: undefined, want: 0 },
+  ])('$header → $want', ({ header, want }) => {
+    expect(maxAgeSeconds(header)).toBe(want);
   });
 });

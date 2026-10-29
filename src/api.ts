@@ -163,7 +163,35 @@ function isOctokitRequestError(error: unknown): error is OctokitRequestError {
   return isRecord(error) && typeof error.status === 'number' && typeof error.message === 'string';
 }
 
-export async function fetchSnapshotHistory(dataSourceUrl?: string): Promise<SnapshotHistory> {
+// A github:// read costs one of the 60 unauthenticated requests per hour, even when GitHub
+// answers 304 Not Modified (checked 2026-10-28), so a result is reused for as long as the
+// response's Cache-Control max-age says it is fresh (60 s on the Contents API), not asked again.
+interface GithubCacheEntry {
+  history: SnapshotHistory;
+  fetchedAt: number;
+  freshUntil: number;
+}
+
+const githubCache = new Map<string, GithubCacheEntry>();
+
+// Seconds a response may be reused, from its Cache-Control header; 0 when it may not be.
+export function maxAgeSeconds(cacheControl: string | null | undefined): number {
+  if (!cacheControl || /no-store|no-cache/i.test(cacheControl)) return 0;
+  const match = /(?:^|[,\s])max-age=(\d+)/i.exec(cacheControl);
+  return match ? Number(match[1]) : 0;
+}
+
+// When a github:// URL was last fetched, and until when that result is reused.
+export function githubFetchInfo(dataSourceUrl: string): { fetchedAt: Date; freshUntil: Date } | null {
+  const entry = githubCache.get(dataSourceUrl);
+  return entry ? { fetchedAt: new Date(entry.fetchedAt), freshUntil: new Date(entry.freshUntil) } : null;
+}
+
+export function clearGithubCache(): void {
+  githubCache.clear();
+}
+
+export async function fetchSnapshotHistory(dataSourceUrl?: string, now: () => number = Date.now): Promise<SnapshotHistory> {
   if (!dataSourceUrl) {
     // Fallback to mock data if no URL is provided
     return new Promise((resolve) => {
@@ -181,8 +209,12 @@ export async function fetchSnapshotHistory(dataSourceUrl?: string): Promise<Snap
       const ref = parts[2];
       const path = parts.slice(3).join('/');
 
+      const cached = githubCache.get(dataSourceUrl);
+      if (cached && now() < cached.freshUntil) return cached.history;
+
       const octokit = new Octokit();
       let content: string;
+      let cacheControl: string | undefined;
       try {
         // The raw media type returns the file itself. The default JSON response leaves `content`
         // empty for files over 1 MB, which a long history of a contract with many functions
@@ -202,6 +234,7 @@ export async function fetchSnapshotHistory(dataSourceUrl?: string): Promise<Snap
           throw new Error('Not a valid file');
         }
         content = data;
+        cacheControl = response.headers['cache-control'];
       } catch (error: unknown) {
         if (isOctokitRequestError(error)) {
           const headers = error.response?.headers ?? {};
@@ -214,7 +247,10 @@ export async function fetchSnapshotHistory(dataSourceUrl?: string): Promise<Snap
         const message = error instanceof Error ? error.message : String(error);
         throw new Error(`GitHub API fetch failed: ${message}`);
       }
-      return parseHistory(JSON.parse(content));
+      const history = parseHistory(JSON.parse(content));
+      const fetchedAt = now();
+      githubCache.set(dataSourceUrl, { history, fetchedAt, freshUntil: fetchedAt + maxAgeSeconds(cacheControl) * 1000 });
+      return history;
     } else {
       throw new Error('Invalid github:// URL format. Expected github://owner/repo/branch/path');
     }

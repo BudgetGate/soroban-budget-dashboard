@@ -38,7 +38,7 @@ Budget Gate is not audited and not production-ready.
 ## Limitations
 
 - History needs the GitHub Action's `history-branch` input (in the Action since `v0.2.0`). Private repositories cannot be read: the dashboard has no token.
-- Results are not cached, and entering the same URL again does not reload it.
+- A `github://` history is reused for as long as GitHub's `Cache-Control: max-age` says it is fresh (60 s on the Contents API), because without a token even a 304 Not Modified costs one of the 60 requests per hour; the page says when it was fetched and until when a refresh reuses it. An `https://` source is left to the browser's HTTP cache (raw.githubusercontent.com sends `max-age=300`, so a refresh within 5 minutes may show the same copy). The refresh button reloads even when the URL is unchanged.
 
 ## Development
 

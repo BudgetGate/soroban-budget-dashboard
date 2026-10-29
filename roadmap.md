@@ -6,7 +6,7 @@ Last updated: 2026-10-28
 
 ## Where I left off
 
-- `main` is at `53029e5` (after #27). Lint, tests (87 after D17) and build pass.
+- `main` is at `e0c0a1a` (after #28). Lint, tests (101 with caching) and build pass.
 - D9 done: `docs/`, the `docs:*` scripts, `vitepress`, `vue`, `react-markdown` (only `Docs.tsx` used it), the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md` are gone. READ DOCS links to budgetgate.github.io/docs/dashboard/; the EXTERNAL DOCS button (pointing at the stale Vercel copy) is removed.
 - Found during D9: `docs/` was deployed after all, by a second Vercel project `budgetgate-docs` (D11). The maintainer deleted that project on 2026-10-27; budgetgate-docs.vercel.app now returns `DEPLOYMENT_NOT_FOUND`, and commits get only the app's `Vercel` status.
 - D6 done: the 6 tests describe the current UI and pass; CI runs lint and tests before the build.
@@ -33,7 +33,8 @@ Last updated: 2026-10-28
 - Trend alerting done (2026-10-28, rules decided by the maintainer): a **Trend alerts** panel above the charts flags, for functions in the latest snapshot, (1) a `pct_of_network_cap` line over the last 5 measurements that reaches 80% within 10 commits, and (2) a metric that rose in each of the last 3 measurements by 10% or more in total. Thresholds match core's `--cap-warning-pct`/`--max-delta-pct` defaults. Snapshots only carry the highest share of any cap, so the cap alert cannot say which metric; per-metric caps are not in the snapshot and the dashboard has no way to fetch them. 85 tests. Checked in headless Chrome on a local production build (1280 and 390 px, no overflow, no console errors): the sample and the test repo's real history show no alerts (real history: "the cap rule needs 5 measurements", it has 3); a five-commit test input (not a measurement) with the cap share 22 → 41% and CPU +13.5% over 3 small steps raised both alerts while the single-commit card stayed CLEAR, and each alert opened the history. Checked again on the live site after #26 deployed (bundle `index-LCFEbIQi.js`), the same four runs with the same results. No real contract history has triggered an alert yet.
 - Pagination dropped (2026-10-28): it was planned when the dashboard would read one snapshot file per commit through the API. Since D5 the history is one `history.json` capped at 200 snapshots, so there is nothing to page.
 - D17 done: `github://` reads with the raw media type, so histories over 1 MB load (the JSON form leaves `content` empty above 1 MB). Checked in headless Chrome against the real test-repo history and a 2.4 MB public file.
-- Next up: caching and a working refresh. Without a token a conditional request (`If-None-Match`, 304) still costs one of the 60 requests per hour (checked 2026-10-28: remaining 47 → 46), so caching means not asking: keep a `github://` result for the 60 s GitHub marks it fresh (`Cache-Control: max-age=60`). Refreshing with the same URL does nothing today; it should reload.
+- Caching and refresh (2026-10-29): a `github://` history is reused per URL until the response's `Cache-Control` `max-age` runs out (60 s on the Contents API), because without a token a conditional request (`If-None-Match`, 304) still costs one of the 60 requests per hour (checked 2026-10-28: remaining 47 → 46). Invalid reads are not kept. The page shows "Fetched from GitHub at …" and until when a refresh reuses that copy. The refresh button now reloads even when the URL is unchanged. `https://` sources are left to the browser's HTTP cache (raw.githubusercontent.com: `max-age=300`). 101 tests; the two new App tests fail on the old `Dashboard.tsx`. **Not yet checked in a browser:** the local dev and preview servers were stopped by Claude Code for low memory and were not restarted without the maintainer's go-ahead.
+- Next up: no roadmap items left in this repo.
 
 ## Phase 1: See what exists, make CI honest
 
@@ -61,7 +62,7 @@ Last updated: 2026-10-28
 
 - [x] D5: decided 2026-10-28: the Action appends each default-branch snapshot to `history.json` on a `history-branch` (soroban-budget-action #24), and the dashboard reads it as a public raw file through its existing `https://` source. A browser token was rejected (each viewer would paste a token that sits in browser storage), and so were the Actions cache and artifacts (browsers cannot read them without auth). No dashboard code change was needed.
 - [x] GitHub reading of large files: raw media type, so histories over 1 MB load (D17)
-- [ ] Caching of GitHub reads and a refresh that reloads (403/429 states done in D8; pagination dropped: the history is one file)
+- [ ] Caching of GitHub reads and a refresh that reloads (403/429 states done in D8; pagination dropped: the history is one file); built, browser check pending
 - [x] Loading, empty, rate-limited and error states
 
 ## Phase 5: Polish

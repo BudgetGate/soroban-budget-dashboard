@@ -12,6 +12,7 @@ vi.mock('./api', async () => {
   return {
     ...actual,
     fetchSnapshotHistory: vi.fn(),
+    githubFetchInfo: vi.fn(() => null),
   };
 });
 
@@ -196,6 +197,43 @@ describe('Dashboard App UI Component', () => {
     render(<App />);
 
     expect(await screen.findByText(status)).toBeInTheDocument();
+  });
+
+  describe('refresh and fetch time', () => {
+    function applyUrl(url: string) {
+      fireEvent.change(screen.getByPlaceholderText('DATASOURCE_URL'), { target: { value: url } });
+      fireEvent.click(screen.getByRole('button', { name: 'Refresh Data' }));
+    }
+
+    it('reloads when the same URL is applied again', async () => {
+      fetchHistory.mockResolvedValue({ snapshots: [snapshot('abc1234', [fn('mint', 100)])] });
+      render(<App />);
+      await screen.findByText('RESOURCE_TELEMETRY');
+
+      applyUrl('https://example.test/history.json');
+      await screen.findByText('RESOURCE_TELEMETRY');
+      applyUrl('https://example.test/history.json');
+      await screen.findByText('RESOURCE_TELEMETRY');
+
+      expect(fetchHistory.mock.calls.map(c => c[0])).toEqual(['', 'https://example.test/history.json', 'https://example.test/history.json']);
+    });
+
+    it('says when a github:// history was fetched and until when it is reused', async () => {
+      const fetchedAt = new Date(2026, 9, 29, 12, 0, 0);
+      const freshUntil = new Date(2026, 9, 29, 12, 1, 0);
+      vi.mocked(api.githubFetchInfo).mockReturnValue({ fetchedAt, freshUntil });
+      fetchHistory.mockResolvedValue({ snapshots: [snapshot('abc1234', [fn('mint', 100)])] });
+      render(<App />);
+      await screen.findByText('RESOURCE_TELEMETRY');
+      expect(screen.queryByRole('status', { name: 'Fetch time' })).not.toBeInTheDocument();
+
+      applyUrl('github://o/r/budgetgate-history/history.json');
+
+      const status = await screen.findByRole('status', { name: 'Fetch time' });
+      expect(status).toHaveTextContent(`Fetched from GitHub at ${fetchedAt.toLocaleTimeString()}.`);
+      expect(status).toHaveTextContent(`Refreshing before ${freshUntil.toLocaleTimeString()} reuses this copy`);
+      expect(api.githubFetchInfo).toHaveBeenCalledWith('github://o/r/budgetgate-history/history.json');
+    });
   });
 
   describe('trend alerts', () => {
