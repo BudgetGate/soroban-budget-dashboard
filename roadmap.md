@@ -75,7 +75,8 @@ Last updated: 2026-10-28
 ## Maintainer actions (Claude must not do these)
 
 - [ ] Vercel: confirm the project redeploys from `main` after merges.
-- [ ] Branch protection on `main`: currently 0 required reviews and no required status checks. Consider requiring `Dashboard CI / build` once it runs tests.
+- [x] Branch protection on `main` (set by the maintainer 2026-10-29, read back through the API): the `build` check (lint, tests, build) is required, branches need not be up to date, 0 reviews (single maintainer), no force-push or deletion. The Vercel check is not required.
+- [x] Repo topics and description (set by the maintainer 2026-10-29, read back through the API): `soroban`, `stellar`, `smart-contracts`, `dashboard`, `react`, `data-visualization`; the description says early-stage and unaudited.
 - [x] Decide between this repo's VitePress `docs/` and the separate `BudgetGate/docs` site: `BudgetGate/docs` (2026-10-26, workspace PR #2).
 - [x] Vercel: remove or disconnect the `budgetgate-docs` project (D11). Deleted by the maintainer on 2026-10-27; it had served a stale copy of the old `docs/` at budgetgate-docs.vercel.app (now `DEPLOYMENT_NOT_FOUND`).
 - [x] Enable private vulnerability reporting (Settings → Security). `SECURITY.md` points to it (D16); enabled by the maintainer 2026-10-28 (API: `enabled: true`).
