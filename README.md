@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/avatar.png" width="120" alt="Budget Gate logo: a resource-cost gauge behind a gate bar"></p>
+
 # soroban-budget-dashboard
 
 A web app that charts a history of [Budget Gate](https://github.com/BudgetGate/soroban-budget-core) snapshots, so you can see at which commit a Soroban contract function got more expensive. It runs entirely in the browser, with no backend.
