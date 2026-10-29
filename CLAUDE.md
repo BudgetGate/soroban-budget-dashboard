@@ -1,12 +1,12 @@
 # CLAUDE.md — soroban-budget-dashboard
 
-Scope: this repo only. If the workspace-level `CLAUDE.md` exists in the parent folder, read it as well. Where the two differ, this file wins for this repo. The defect table below was checked against `origin/main` (`4fdd186`) on 2026-10-26. Re-verify an item before relying on it.
+Scope: this repo only. If the workspace-level `CLAUDE.md` exists in the parent folder, read it as well. Where the two differ, this file wins for this repo. The defect table below was checked against `origin/main` (`180ebe0`) on 2026-10-29. Re-verify an item before relying on it.
 
 ## 1. What this repo is
 
 The visualization layer of Budget Gate. A single-page React app deployed on Vercel at `budgetgate-dashboard.vercel.app`. It is meant to read the history of baseline snapshots from a Soroban contract repo through the GitHub API and chart how each function's CPU, read bytes, write bytes and footprint entries drift over commits. (Core records `memory_bytes` as `null` on current RPCs and no longer compares it, so the dashboard does not chart it.)
 
-User docs live in the separate `BudgetGate/docs` site (budgetgate.github.io/docs/), which describes this repo as of `4fdd186`, including its sample data and limitations. This repo has no docs pages of its own (D9 removed `docs/`, the `/docs` route and `DOCUMENTATION.md`); the app's READ DOCS button links to budgetgate.github.io/docs/dashboard/. A PR here that changes what the app shows or how it loads data needs a matching docs PR, linked from both descriptions.
+User docs live in the separate `BudgetGate/docs` site (budgetgate.github.io/docs/), which describes this repo as of `180ebe0` (each user-facing PR since D9 shipped with a matching docs PR), including its sample data and limitations. This repo has no docs pages of its own (D9 removed `docs/`, the `/docs` route and `DOCUMENTATION.md`); the app's READ DOCS button links to budgetgate.github.io/docs/dashboard/. A PR here that changes what the app shows or how it loads data needs a matching docs PR, linked from both descriptions.
 
 It has no backend and no database. Everything it shows must come from GitHub or from clearly labeled sample data.
 
@@ -17,7 +17,7 @@ Boundaries:
 
 ## 2. Known layout
 
-State of `main` (`4fdd186`) on 2026-10-26. `package.json` name `soroban-budget-dashboard` (D1, 2026-10-27). `type: module`, private.
+Layout last checked in full against `main` `4fdd186` on 2026-10-26; later PRs (through #33, `180ebe0`, 2026-10-29) updated the rows they changed. `package.json` name `soroban-budget-dashboard` (D1, 2026-10-27). `type: module`, private.
 
 | Item | Detail (read unless stated) |
 |------|--------|
@@ -41,7 +41,7 @@ Scripts: `dev`, `build` (`tsc -b && vite build`), `lint` (`oxlint`), `preview`, 
 
 ## 3. Known defects
 
-Checked 2026-10-28 against `origin/main` (`51f139f`).
+Checked 2026-10-29 against `origin/main` (`180ebe0`): no open defects; `npm audit` 0.
 
 | ID | Defect | Evidence |
 |----|--------|----------|
@@ -63,7 +63,7 @@ npm run build       # tsc -b && vite build
 npm run lint        # oxlint
 npm test            # vitest run
 ```
-Run on 2026-10-27 after D6 (Linux, Node 22): `npm run lint` passes (exit 0, no warnings), `npm run build` passes with a chunk-size warning, `npm test` 6 of 6 pass. `dev` was not run, and the page was not opened in a browser.
+Run on 2026-10-29 on `180ebe0` (Linux, Node 22): `npm run lint` exits 0, `npm test` 101 of 101 pass, `npm run build` passes with a chunk-size warning. The production build and the live site were opened in headless Chrome the same day (D18). `npm run dev` was not run.
 
 ## 6. Rules
 
