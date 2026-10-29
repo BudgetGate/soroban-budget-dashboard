@@ -39,6 +39,8 @@ describe('metricValue', () => {
     { name: 'is null when an entry count is absent (schema 1.0)', snap: snapshot([fn('mint', { read_entries: undefined })]), selected: 'mint', key: 'read_entries', want: null },
     { name: 'does not sum a partial set', snap: snapshot([fn('mint'), fn('burn', { read_entries: null })]), selected: 'all', key: 'read_entries', want: null },
     { name: 'keeps a real zero', snap: snapshot([fn('mint', { write_bytes: 0 })]), selected: 'mint', key: 'write_bytes', want: 0 },
+    { name: 'is null when the selected name is repeated', snap: snapshot([fn('mint'), fn('mint', { cpu_instructions: 900 })]), selected: 'mint', key: 'cpu_instructions', want: null },
+    { name: 'sums repeated entries into the total', snap: snapshot([fn('mint'), fn('mint', { cpu_instructions: 900 })]), selected: 'all', key: 'cpu_instructions', want: 1000 },
   ];
 
   it.each(cases)('$name', ({ snap, selected, key, want }) => {
@@ -80,7 +82,16 @@ describe('functionHistory', () => {
     {
       name: 'marks snapshots without the function and compares across the gap',
       snaps: [snapshot([fn('mint', { cpu_instructions: 100 })]), snapshot([fn('burn')]), snapshot([fn('mint', { cpu_instructions: 150 })])],
-      want: [{ present: true }, { present: false, pctOfNetworkCap: null }, { present: true }],
+      want: [{ present: true, repeated: false }, { present: false, repeated: false, pctOfNetworkCap: null }, { present: true, repeated: false }],
+    },
+    {
+      name: 'marks a repeated name as repeated, not measured, and compares across it',
+      snaps: [snapshot([fn('mint', { cpu_instructions: 100 })]), snapshot([fn('mint'), fn('mint', { cpu_instructions: 900 })]), snapshot([fn('mint', { cpu_instructions: 150 })])],
+      want: [
+        { present: true, repeated: false },
+        { present: false, repeated: true, values: { cpu_instructions: null, read_bytes: null, write_bytes: null, read_entries: null, write_entries: null } },
+        { present: true, repeated: false, changePct: { cpu_instructions: 50, read_bytes: 0, write_bytes: 0, read_entries: 0, write_entries: 0 } },
+      ],
     },
     {
       name: 'treats a pct_of_network_cap of 0 as not recorded',
@@ -131,5 +142,20 @@ describe('functionSummaries', () => {
 
   it('is empty for an empty history', () => {
     expect(functionSummaries([])).toEqual([]);
+  });
+
+  it('keeps the last single measurement when a later snapshot repeats the name', () => {
+    const summaries = functionSummaries([
+      snapshotAt('aaaaaaa111', [fn('mint', { cpu_instructions: 120 })]),
+      snapshotAt('bbbbbbb222', [fn('mint'), fn('mint', { cpu_instructions: 900 })]),
+    ]);
+    expect(summaries).toHaveLength(1);
+    expect(summaries[0]).toMatchObject({ name: 'mint', inLatestSnapshot: true, latest: { commit: 'aaaaaaa', present: true } });
+    expect(summaries[0].latest.values.cpu_instructions).toBe(120);
+  });
+
+  it('shows the repeated row when the name was never measured alone', () => {
+    const [summary] = functionSummaries([snapshotAt('aaaaaaa111', [fn('mint'), fn('mint', { cpu_instructions: 900 })])]);
+    expect(summary.latest).toMatchObject({ commit: 'aaaaaaa', present: false, repeated: true });
   });
 });

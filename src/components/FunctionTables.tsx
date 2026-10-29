@@ -12,6 +12,9 @@ const COLUMNS: { key: MetricKey; label: string }[] = [
 
 const integer = new Intl.NumberFormat('en-US');
 
+// A snapshot with two entries for one name (core before v0.2.3) does not say which is the function.
+const REPEATED_NOTE = 'Name repeated in this snapshot, not measured';
+
 function formatValue(value: number | null): string {
   return value === null ? 'not reported' : integer.format(value);
 }
@@ -92,8 +95,14 @@ function FunctionsTableView({ summaries, onSelect }: FunctionsTableProps) {
                   {formatCommit(latest.commit)}
                   {!inLatestSnapshot && <span className="ml-2 text-[#ff0080] uppercase">not in latest snapshot</span>}
                 </td>
-                {COLUMNS.map(c => <MetricCell key={c.key} row={latest} metric={c.key} />)}
-                <td className={`${td} text-right text-[#00ff9d]/70`}>{formatCap(latest.pctOfNetworkCap)}</td>
+                {latest.present ? (
+                  <>
+                    {COLUMNS.map(c => <MetricCell key={c.key} row={latest} metric={c.key} />)}
+                    <td className={`${td} text-right text-[#00ff9d]/70`}>{formatCap(latest.pctOfNetworkCap)}</td>
+                  </>
+                ) : (
+                  <td className={`${td} text-[#ff0080] uppercase`} colSpan={COLUMNS.length + 1}>{REPEATED_NOTE}</td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -148,7 +157,9 @@ function FunctionHistoryTableView({ name, rows, onBack }: FunctionHistoryTablePr
                     <td className={`${td} text-right text-[#00ff9d]/70`}>{formatCap(row.pctOfNetworkCap)}</td>
                   </>
                 ) : (
-                  <td className={`${td} text-[#ff0080] uppercase`} colSpan={COLUMNS.length + 1}>Not in this snapshot</td>
+                  <td className={`${td} text-[#ff0080] uppercase`} colSpan={COLUMNS.length + 1}>
+                    {row.repeated ? REPEATED_NOTE : 'Not in this snapshot'}
+                  </td>
                 )}
               </tr>
             ))}

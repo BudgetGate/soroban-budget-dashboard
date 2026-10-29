@@ -11,13 +11,26 @@ function valueOf(fn: SnapshotFunction, key: MetricKey): number | null {
   return typeof value === 'number' ? value : null;
 }
 
+// The snapshot's entry for a function, if it has exactly one. Core before v0.2.3 did not reject
+// a fixture that repeated a name, so older snapshots can hold two entries for one name; neither
+// is that function's measurement, so the function counts as unmeasured there.
+export function uniqueFunction(snapshot: Snapshot, name: string): SnapshotFunction | undefined {
+  const matches = snapshot.functions.filter(f => f.name === name);
+  return matches.length === 1 ? matches[0] : undefined;
+}
+
+function isRepeated(snapshot: Snapshot, name: string): boolean {
+  return snapshot.functions.filter(f => f.name === name).length > 1;
+}
+
 // A metric's value for one snapshot: the selected function's value, or the sum
 // over all functions when selectedFunction is 'all'. null means unknown: the
-// function is missing from the snapshot, or a value was not reported. A sum is
-// never taken over a partial set of values.
+// function is missing from the snapshot or repeated in it, or a value was not
+// reported. A sum is never taken over a partial set of values; repeated entries
+// are each a real measurement, so the sum includes them.
 export function metricValue(snapshot: Snapshot, selectedFunction: string, key: MetricKey): number | null {
   if (selectedFunction !== 'all') {
-    const fn = snapshot.functions.find(f => f.name === selectedFunction);
+    const fn = uniqueFunction(snapshot, selectedFunction);
     return fn ? valueOf(fn, key) : null;
   }
   if (snapshot.functions.length === 0) return null;
@@ -51,8 +64,10 @@ export function toChartPoints(snapshots: Snapshot[], selectedFunction: string): 
 export interface FunctionRow {
   commit: string;
   generatedAt: string;
-  // false when the snapshot does not contain the function; values are then all null.
+  // false when the snapshot does not contain the function exactly once; values are then all null.
   present: boolean;
+  // true when the snapshot contains more than one entry with the function's name.
+  repeated: boolean;
   values: Record<MetricKey, number | null>;
   // Percent change of each metric since the function's previous measurement; null when there
   // is none, either value is unknown, or the previous value was 0.
@@ -70,11 +85,12 @@ function emptyMetrics(): Record<MetricKey, number | null> {
 export function functionHistory(snapshots: Snapshot[], name: string): FunctionRow[] {
   let previous: Record<MetricKey, number | null> | null = null;
   return snapshots.map(snapshot => {
-    const fn = snapshot.functions.find(f => f.name === name);
+    const fn = uniqueFunction(snapshot, name);
     const row: FunctionRow = {
       commit: snapshot.commit_sha.substring(0, 7),
       generatedAt: snapshot.generated_at,
       present: fn !== undefined,
+      repeated: isRepeated(snapshot, name),
       values: emptyMetrics(),
       changePct: emptyMetrics(),
       pctOfNetworkCap: null,
@@ -110,7 +126,10 @@ export function functionSummaries(snapshots: Snapshot[]): FunctionSummary[] {
   }
   const latestNames = new Set(snapshots[snapshots.length - 1].functions.map(f => f.name));
   return names.map(name => {
-    const rows = functionHistory(snapshots, name).filter(r => r.present);
-    return { name, latest: rows[rows.length - 1], inLatestSnapshot: latestNames.has(name) };
+    // A function whose name was repeated in every snapshot that has it shows its latest repeated row.
+    const rows = functionHistory(snapshots, name).filter(r => r.present || r.repeated);
+    const measured = rows.filter(r => r.present);
+    const latest = measured.length > 0 ? measured[measured.length - 1] : rows[rows.length - 1];
+    return { name, latest, inLatestSnapshot: latestNames.has(name) };
   });
 }

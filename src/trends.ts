@@ -88,11 +88,13 @@ function creepTrends(name: string, measured: FunctionRow[]): CreepTrend[] {
 export function findTrends(snapshots: Snapshot[]): Trend[] {
   if (snapshots.length === 0) return [];
   const trends: Trend[] = [];
-  for (const fn of snapshots[snapshots.length - 1].functions) {
-    const measured = functionHistory(snapshots, fn.name).filter(r => r.present);
-    const cap = capTrend(fn.name, measured);
+  // Once per name: an older snapshot can repeat one (see uniqueFunction).
+  const names = new Set(snapshots[snapshots.length - 1].functions.map(fn => fn.name));
+  for (const name of names) {
+    const measured = functionHistory(snapshots, name).filter(r => r.present);
+    const cap = capTrend(name, measured);
     if (cap) trends.push(cap);
-    trends.push(...creepTrends(fn.name, measured));
+    trends.push(...creepTrends(name, measured));
   }
   return trends;
 }

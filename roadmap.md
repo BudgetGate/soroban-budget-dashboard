@@ -6,6 +6,7 @@ Last updated: 2026-10-29
 
 ## Where I left off
 
+- Repeated function names (2026-10-29, open PR; follows core C22): core before v0.2.3 accepted a fixture that repeated a name, so a history can hold a snapshot with two entries for one name, and every per-function lookup took the first one silently. Now `uniqueFunction` returns an entry only when the name appears once: that snapshot is a gap in the function's charts, its history row says "Name repeated in this snapshot, not measured", changes compare across it, trends skip it and alert once per name, and the regression card ignores it; the all-functions sum still counts both entries. 107 tests. Checked in headless Chrome on a local production build with the test repo's real `history.json`, one snapshot given a second `bump` entry: gap, the note, ±0% across it, no console errors.
 - `main` is at `276559d` (after #32). Lint, tests (101) and build pass.
 - D9 done: `docs/`, the `docs:*` scripts, `vitepress`, `vue`, `react-markdown` (only `Docs.tsx` used it), the `/docs` route, `Docs.tsx` and `DOCUMENTATION.md` are gone. READ DOCS links to budgetgate.github.io/docs/dashboard/; the EXTERNAL DOCS button (pointing at the stale Vercel copy) is removed.
 - Found during D9: `docs/` was deployed after all, by a second Vercel project `budgetgate-docs` (D11). The maintainer deleted that project on 2026-10-27; budgetgate-docs.vercel.app now returns `DEPLOYMENT_NOT_FOUND`, and commits get only the app's `Vercel` status.
