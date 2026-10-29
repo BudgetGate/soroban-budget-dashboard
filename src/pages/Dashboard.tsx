@@ -32,10 +32,9 @@ function Dashboard() {
   const [reloadCount, setReloadCount] = useState(0);
   const [fetchInfo, setFetchInfo] = useState<{ fetchedAt: Date; freshUntil: Date } | null>(null);
 
+  // Loading starts true and the apply handler resets it, so the effect only reports the result.
   useEffect(() => {
     let isMounted = true;
-    setLoading(true);
-    setError(null);
     fetchSnapshotHistory(dataSourceUrl)
       .then(data => {
         if (isMounted) {
@@ -54,6 +53,8 @@ function Dashboard() {
   }, [dataSourceUrl, reloadCount]);
 
   const handleApplyUrl = () => {
+    setLoading(true);
+    setError(null);
     setDataSourceUrl(tempUrl);
     setReloadCount(count => count + 1);
   };

@@ -19,11 +19,11 @@ vi.mock('./api', async () => {
 // Counts chart renders, to check that typing in the data source box leaves the charts alone.
 // ResponsiveContainer is counted because jsdom has no layout: it measures 0x0 and never renders
 // the LineChart inside it.
-const chartRenders = vi.hoisted(() => ({ count: 0 }));
+const chartRender = vi.hoisted(() => vi.fn());
 vi.mock('recharts', async () => {
   const actual = await vi.importActual<typeof import('recharts')>('recharts');
   const CountedResponsiveContainer = (props: ComponentProps<typeof actual.ResponsiveContainer>) => {
-    chartRenders.count++;
+    chartRender();
     return <actual.ResponsiveContainer {...props} />;
   };
   return { ...actual, ResponsiveContainer: CountedResponsiveContainer };
@@ -157,7 +157,7 @@ describe('Dashboard App UI Component', () => {
 
     render(<App />);
     await screen.findByText('RESOURCE_TELEMETRY');
-    const rendersBefore = chartRenders.count;
+    const rendersBefore = chartRender.mock.calls.length;
     expect(rendersBefore).toBeGreaterThan(0);
 
     const input = screen.getByPlaceholderText('DATASOURCE_URL') as HTMLInputElement;
@@ -166,7 +166,7 @@ describe('Dashboard App UI Component', () => {
     }
 
     expect(input.value).toBe('https://raw.githubusercontent.com/o/r/budgetgate-history/history.json');
-    expect(chartRenders.count).toBe(rendersBefore);
+    expect(chartRender).toHaveBeenCalledTimes(rendersBefore);
   });
 
   it('charts CPU, ledger bytes and footprint entries, and says when entries were not reported', async () => {
