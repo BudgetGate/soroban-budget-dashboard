@@ -2,7 +2,7 @@
 
 Progress tracker for this repo. The defect IDs (D1, D2, …) and their evidence are in `CLAUDE.md` section 3; the order comes from `CLAUDE.md` section 4. Tick a box only when the change is merged to `main` and, for UI changes, checked in a browser.
 
-Last updated: 2026-10-28
+Last updated: 2026-10-29
 
 ## Where I left off
 
@@ -34,6 +34,8 @@ Last updated: 2026-10-28
 - Pagination dropped (2026-10-28): it was planned when the dashboard would read one snapshot file per commit through the API. Since D5 the history is one `history.json` capped at 200 snapshots, so there is nothing to page.
 - D17 done: `github://` reads with the raw media type, so histories over 1 MB load (the JSON form leaves `content` empty above 1 MB). Checked in headless Chrome against the real test-repo history and a 2.4 MB public file.
 - Caching and refresh (2026-10-29): a `github://` history is reused per URL until the response's `Cache-Control` `max-age` runs out (60 s on the Contents API), because without a token a conditional request (`If-None-Match`, 304) still costs one of the 60 requests per hour (checked 2026-10-28: remaining 47 → 46). Invalid reads are not kept. The page shows "Fetched from GitHub at …" and until when a refresh reuses that copy. The refresh button now reloads even when the URL is unchanged. `https://` sources are left to the browser's HTTP cache (raw.githubusercontent.com: `max-age=300`). 101 tests; the two new App tests fail on the old `Dashboard.tsx`. Checked 2026-10-29 in headless Chrome, on a local production build and again on the live site after #29 deployed (bundle `index-CljhZuqo.js`): `github://` on the test repo's history made 1 API request, a refresh within 60 s made none and showed the same fetch time, a refresh after 61 s made a second request with a new fetch time; refreshing the same `https://` URL sent a new request; no console errors.
+- D18 (2026-10-29): build and test dependencies patched in the lockfile (`vite` 8.3.5, `nanoid` 3.3.20, `source-map-js` 1.2.2, `undici` 7.30.1, `vitest` 4.1.12), `npm audit` 6 (4 high) → 0. Lint, 101 tests and build pass. Checked in headless Chrome against `vite preview` of this build and of `main`'s: identical output for sample data, the test repo's history by raw URL and by `github://` (latest commit `86a4a71`, the Action's A21 push run, 4 snapshots; CPU 291,573), no console errors.
+- Found during D18, not changed: `@tailwindcss/vite`, `tailwindcss`, `postcss` and `autoprefixer` are in `dependencies` though only the build uses them, which is why `npm audit --omit=dev` listed build-tool advisories. Moving them to `devDependencies` changes nothing at runtime (Vite bundles the app either way); a maintainer call.
 - Next up: no roadmap items left in this repo.
 
 ## Phase 1: See what exists, make CI honest
@@ -71,6 +73,7 @@ Last updated: 2026-10-28
 - [x] D16: `SECURITY.md` points to GitHub private vulnerability reporting instead of `security@budgetgate.io`, whose domain does not exist (found 2026-10-28)
 - [x] Per-function drill-down: functions table and per-function history table
 - [x] Trend alerting across several commits: cap projection and creep
+- [x] D18: build and test dependencies without known vulnerabilities (`npm audit` 0)
 
 ## Maintainer actions (Claude must not do these)
 
