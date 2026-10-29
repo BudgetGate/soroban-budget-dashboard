@@ -128,6 +128,16 @@ describe('findTrends', () => {
   it('is empty for an empty history', () => {
     expect(findTrends([])).toEqual([]);
   });
+
+  it('leaves out a snapshot that repeats the name and flags the function once', () => {
+    const snaps = cpus(1000, 1040, 1080, 1142);
+    // A repeat in the middle is skipped like a gap; one in the latest snapshot does not double the alert.
+    snaps.splice(2, 0, { ...snaps[0], commit_sha: 'rep0000', functions: [fn('bump', { cpu_instructions: 1 }), fn('bump', { cpu_instructions: 9000 })] });
+    snaps.push({ ...snaps[0], commit_sha: 'rep1111', functions: [fn('bump', { cpu_instructions: 1 }), fn('bump', { cpu_instructions: 9000 })] });
+    const creep = findTrends(snaps).filter((t): t is CreepTrend => t.kind === 'creep');
+    expect(creep).toHaveLength(1);
+    expect(creep[0].values).toEqual([1000, 1040, 1080, 1142]);
+  });
 });
 
 describe('capRuleApplies', () => {

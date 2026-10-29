@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Activity, CheckCircle2, AlertTriangle, Settings, RefreshCw, Zap, Server, Database, ChevronDown, Info, BookOpen, Clock, FlaskConical } from 'lucide-react';
 import { fetchSnapshotHistory, githubFetchInfo, RateLimitError } from '../api';
 import type { SnapshotHistory } from '../api';
-import { functionHistory, functionSummaries, toChartPoints } from '../metrics';
+import { functionHistory, functionSummaries, toChartPoints, uniqueFunction } from '../metrics';
 import MetricChart from '../components/MetricChart';
 import { FunctionHistoryTable, FunctionsTable } from '../components/FunctionTables';
 import TrendAlerts from '../components/TrendAlerts';
@@ -88,9 +88,10 @@ function Dashboard() {
   const regressionStatus = useMemo(() => {
     if (!latestSnapshot || !previousSnapshot) return 'Clear';
     let hasRegression = false;
-    latestSnapshot.functions.forEach(f => {
-      const prevF = previousSnapshot.functions.find(pf => pf.name === f.name);
-      if (prevF && f.cpu_instructions > prevF.cpu_instructions * 1.1) {
+    latestSnapshot.functions.forEach(entry => {
+      const f = uniqueFunction(latestSnapshot, entry.name);
+      const prevF = uniqueFunction(previousSnapshot, entry.name);
+      if (f && prevF && f.cpu_instructions > prevF.cpu_instructions * 1.1) {
         hasRegression = true;
       }
     });
