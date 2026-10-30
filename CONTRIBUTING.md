@@ -11,6 +11,7 @@
    ```bash
    npm run lint      # oxlint
    npm test          # Vitest with jsdom; the data API is mocked, no network
+   npm run test:coverage  # the same tests with a coverage summary (what CI runs)
    npm run build     # tsc -b (type-checks src/, tests included), then vite build
    ```
 4. Run the app with `npm run dev` and open the URL Vite prints.

@@ -53,6 +53,7 @@ npm ci
 npm run dev       # Vite dev server, http://localhost:5173 by default
 npm run lint      # oxlint
 npm test          # Vitest
+npm run test:coverage  # Vitest with a coverage summary (CI runs this)
 npm run build     # type-check, then build into dist/
 ```
 
