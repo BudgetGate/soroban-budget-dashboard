@@ -2,6 +2,14 @@
 
 # soroban-budget-dashboard
 
+<p align="center">
+  <a href="https://github.com/BudgetGate/soroban-budget-dashboard/actions/workflows/ci.yml"><img src="https://github.com/BudgetGate/soroban-budget-dashboard/actions/workflows/ci.yml/badge.svg" alt="Dashboard CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/BudgetGate/soroban-budget-dashboard" alt="License: MIT"></a>
+</p>
+
+<p align="center"><a href="https://budgetgate.github.io/docs/">Docs</a> · <a href="https://budgetgate.github.io/docs/#see-it-run">Demo (75 s)</a> · <a href="https://budgetgate-dashboard.vercel.app/">Dashboard</a> · <a href="https://github.com/BudgetGate/soroban-budget-core/discussions">Discussions</a></p>
+
+
 A web app that charts a history of [Budget Gate](https://github.com/BudgetGate/soroban-budget-core) snapshots, so you can see at which commit a Soroban contract function got more expensive. It runs entirely in the browser, with no backend.
 
 - Live: [budgetgate-dashboard.vercel.app](https://budgetgate-dashboard.vercel.app/)
@@ -62,6 +70,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the rules for changes and pull reques
 ## Deployment
 
 Vercel builds every pull request as a preview and deploys `main` to the live URL. `npm run build` writes a static site to `dist/`.
+
+## Community
+
+Questions and ideas: [GitHub Discussions](https://github.com/BudgetGate/soroban-budget-core/discussions). Contributions are welcome; see [`CONTRIBUTING.md`](CONTRIBUTING.md) and the [open issues](https://github.com/BudgetGate/soroban-budget-dashboard/issues).
 
 ## Security
 
