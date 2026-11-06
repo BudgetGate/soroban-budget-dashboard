@@ -82,10 +82,30 @@ describe('fetchSnapshotHistory', () => {
     expect((error as RateLimitError).retryAt).toEqual(new Date(1793102400 * 1000));
   });
 
-  it('keeps other HTTP errors as plain errors', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 404, statusText: 'Not Found' })));
+  // HTTP/2 responses have no status text, so the status code is always shown.
+  it.each([
+    { name: 'HTTP/1 with status text', statusText: 'Not Found', expected: 'Failed to fetch history: HTTP 404 Not Found' },
+    { name: 'HTTP/2 without status text', statusText: '', expected: 'Failed to fetch history: HTTP 404' },
+  ])('keeps other HTTP errors as plain errors ($name)', async ({ statusText, expected }) => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 404, statusText })));
 
-    await expect(fetchSnapshotHistory('https://example.test/history.json')).rejects.toThrow('Failed to fetch history: Not Found');
+    const error = await fetchSnapshotHistory('https://example.test/history.json').catch((e: unknown) => e);
+    expect(error).not.toBeInstanceOf(RateLimitError);
+    expect((error as Error).message).toBe(expected);
+  });
+
+  it('says plainly when a URL returns something other than JSON', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<!DOCTYPE html><html></html>')));
+
+    await expect(fetchSnapshotHistory('https://example.test/')).rejects.toThrow(
+      'The data source did not return JSON. Check that the URL points to a history.json file.');
+  });
+
+  it('says plainly when a GitHub file is not JSON', async () => {
+    getContent.mockResolvedValue({ data: '# README', headers: {} });
+
+    await expect(fetchSnapshotHistory('github://owner/repo/main/README.md')).rejects.toThrow(
+      'The data source did not return JSON. Check that the URL points to a history.json file.');
   });
 
   it('rejects a fetched history with an unknown schema_version', async () => {
