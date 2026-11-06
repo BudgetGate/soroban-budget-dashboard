@@ -191,6 +191,16 @@ export function clearGithubCache(): void {
   githubCache.clear();
 }
 
+// A URL that serves a web page or another file instead of JSON would otherwise surface the
+// parser's own message ("Unexpected token '<'"), which does not say what to fix.
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error('The data source did not return JSON. Check that the URL points to a history.json file.');
+  }
+}
+
 export async function fetchSnapshotHistory(dataSourceUrl?: string, now: () => number = Date.now): Promise<SnapshotHistory> {
   if (!dataSourceUrl) {
     // Fallback to mock data if no URL is provided
@@ -247,7 +257,7 @@ export async function fetchSnapshotHistory(dataSourceUrl?: string, now: () => nu
         const message = error instanceof Error ? error.message : String(error);
         throw new Error(`GitHub API fetch failed: ${message}`);
       }
-      const history = parseHistory(JSON.parse(content));
+      const history = parseHistory(parseJson(content));
       const fetchedAt = now();
       githubCache.set(dataSourceUrl, { history, fetchedAt, freshUntil: fetchedAt + maxAgeSeconds(cacheControl) * 1000 });
       return history;
@@ -261,7 +271,9 @@ export async function fetchSnapshotHistory(dataSourceUrl?: string, now: () => nu
   if (!response.ok) {
     const rateLimit = rateLimitFrom(response.status, name => response.headers.get(name), response.statusText);
     if (rateLimit) throw rateLimit;
-    throw new Error(`Failed to fetch history: ${response.statusText}`);
+    // HTTP/2 responses have no status text, so the status code is always shown.
+    const status = response.statusText ? `HTTP ${response.status} ${response.statusText}` : `HTTP ${response.status}`;
+    throw new Error(`Failed to fetch history: ${status}`);
   }
-  return parseHistory(await response.json());
+  return parseHistory(parseJson(await response.text()));
 }
