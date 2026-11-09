@@ -69,7 +69,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the rules for changes and pull reques
 
 ## Deployment
 
-Vercel builds every pull request as a preview and deploys `main` to the live URL. `npm run build` writes a static site to `dist/`.
+Vercel builds every pull request as a preview and deploys `main` to the live URL. `npm run build` writes a static site to `dist/`. `vercel.json` sets the response headers: a Content Security Policy (scripts from the site only; styles and fonts from the site and Google Fonts; data from any `https:` URL, since you choose the data source), no framing, `nosniff` and no referrer.
 
 ## Community
 
